@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+
+<html dir="rtl" lang="he">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>שבץ נא</title>
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>שבץ נא</title>
+<style>
         * {
             box-sizing: border-box;
             margin: 0;
@@ -338,68 +339,80 @@
             background: #d1ecf1;
             color: #0c5460;
         }
-    </style>
+    
+@media (max-width: 768px) {
+    .board .cell, .tile {
+        width: 50px;
+        height: 50px;
+        font-size: 16px;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .game-area {
+        flex-direction: column;
+    }
+
+    .btn {
+        padding: 15px;
+        font-size: 16px;
+    }
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎯 שבץ נא אונליין</h1>
-            <p>משחק מילים עברי מקוון</p>
-        </div>
-        
-        <div class="room-section">
-            <h3>חיבור למשחק</h3>
-            <div class="input-group">
-                <input type="text" id="roomInput" placeholder="הכנס קוד חדר (או השאר ריק ליצירת חדר חדש)">
-                <input type="text" id="nameInput" placeholder="השם שלך" maxlength="20">
-                <button class="btn btn-primary" onclick="joinRoom()">הצטרף למשחק</button>
-            </div>
-            <div class="connection-status disconnected" id="connectionStatus">
+<div class="container">
+<div class="header">
+<h1>🎯 שבץ נא אונליין</h1>
+<p>משחק מילים עברי מקוון</p>
+</div>
+<div class="room-section">
+<h3>חיבור למשחק</h3>
+<div class="input-group">
+<input id="roomInput" placeholder="הכנס קוד חדר (או השאר ריק ליצירת חדר חדש)" type="text"/>
+<input id="nameInput" maxlength="20" placeholder="השם שלך" type="text"/>
+<button class="btn btn-primary" onclick="joinRoom()">הצטרף למשחק</button>
+</div>
+<div class="connection-status disconnected" id="connectionStatus">
                 לא מחובר
             </div>
-        </div>
-        
-        <div class="game-area">
-            <div class="board-container">
-                <div class="board" id="gameBoard"></div>
-                
-                <div class="temp-tiles" id="tempTiles"></div>
-                
-                <div class="controls">
-                    <button class="btn btn-primary" id="confirmBtn" onclick="confirmWord()" disabled>אשר מילה</button>
-                    <button class="btn btn-warning" id="clearBtn" onclick="clearTemporary()" disabled>נקה</button>
-                    <button class="btn btn-secondary" id="exchangeBtn" onclick="exchangeTiles()" disabled>החלף אותיות</button>
-                    <button class="btn btn-secondary" id="passBtn" onclick="passTurn()" disabled>דלג תור</button>
-                </div>
-            </div>
-            
-            <div class="sidebar">
-                <div class="players-list">
-                    <h3>שחקנים</h3>
-                    <div id="playersList"></div>
-                </div>
-                
-                <div class="player-info">
-                    <h3>המידע שלי</h3>
-                    <div>ניקוד: <span id="myScore">0</span></div>
-                    <div>אותיות נותרות: <span id="myTilesCount">7</span></div>
-                </div>
-                
-                <div class="player-tiles">
-                    <h3>האותיות שלי</h3>
-                    <div class="tiles-container" id="playerTiles"></div>
-                </div>
-                
-                <div class="game-info">
-                    <h3>מידע משחק</h3>
-                    <div>אותיות בשק: <span id="tilesLeft">100</span></div>
-                    <div>קוד חדר: <span id="roomCode">-</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
+</div>
+<div class="game-area">
+<div class="board-container">
+<div class="board" id="gameBoard"></div>
+<div class="temp-tiles" id="tempTiles"></div>
+<div class="controls">
+<button class="btn btn-primary" disabled="" id="confirmBtn" onclick="confirmWord()">אשר מילה</button>
+<button class="btn btn-warning" disabled="" id="clearBtn" onclick="clearTemporary()">נקה</button>
+<button class="btn btn-secondary" disabled="" id="exchangeBtn" onclick="exchangeTiles()">החלף אותיות</button>
+<button class="btn btn-secondary" disabled="" id="passBtn" onclick="passTurn()">דלג תור</button>
+</div>
+</div>
+<div class="sidebar">
+<div class="players-list">
+<h3>שחקנים</h3>
+<div id="playersList"></div>
+</div>
+<div class="player-info">
+<h3>המידע שלי</h3>
+<div>ניקוד: <span id="myScore">0</span></div>
+<div>אותיות נותרות: <span id="myTilesCount">7</span></div>
+</div>
+<div class="player-tiles">
+<h3>האותיות שלי</h3>
+<div class="tiles-container" id="playerTiles"></div>
+</div>
+<div class="game-info">
+<h3>מידע משחק</h3>
+<div>אותיות בשק: <span id="tilesLeft">100</span></div>
+<div>קוד חדר: <span id="roomCode">-</span></div>
+</div>
+</div>
+</div>
+</div>
+<script>
         // הגדרות המשחק
         const BOARD_SIZE = 15;
         const TILES_PER_PLAYER = 7;
