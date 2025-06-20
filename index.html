@@ -339,28 +339,7 @@
             background: #d1ecf1;
             color: #0c5460;
         }
-    
-@media (max-width: 768px) {
-    .board .cell, .tile {
-        width: 50px;
-        height: 50px;
-        font-size: 16px;
-    }
-
-    .sidebar {
-        width: 100%;
-    }
-
-    .game-area {
-        flex-direction: column;
-    }
-
-    .btn {
-        padding: 15px;
-        font-size: 16px;
-    }
-}
-</style>
+    </style>
 </head>
 <body>
 <div class="container">
@@ -1125,6 +1104,145 @@ function getCellBonus(row, col) {
             createBoard();
             updateControls();
         });
-    </script>
+    
+
+
+// פונקציה זו תחליף את calculateWordScore הקיימת אצלך
+function calculateWordScore() {
+    const board = gameState.board;
+    const newTiles = gameState.temporaryTiles;
+    const allWords = findAllWordsFormed(board, newTiles);
+    let totalScore = 0;
+
+    for (const word of allWords) {
+        let wordScore = 0;
+        let wordMultiplier = 1;
+
+        for (const tile of word.tiles) {
+            const isNew = newTiles.some(t => t.row === tile.row && t.col === tile.col);
+            let letterScore = LETTER_DISTRIBUTION[tile.letter]?.points || 0;
+
+            if (isNew) {
+                const bonusType = getCellBonus(tile.row, tile.col);
+                if (bonusType === 'letter-double') letterScore *= 2;
+                if (bonusType === 'letter-triple') letterScore *= 3;
+                if (bonusType === 'word-double') wordMultiplier *= 2;
+                if (bonusType === 'word-triple') wordMultiplier *= 3;
+            }
+
+            wordScore += letterScore;
+        }
+
+        totalScore += wordScore * wordMultiplier;
+    }
+
+    if (newTiles.length === 7) {
+        totalScore += 50;
+    }
+
+    return totalScore;
+}
+
+function findAllWordsFormed(board, newTiles) {
+    const words = [];
+    const directions = [
+        { dr: 0, dc: 1 },
+        { dr: 1, dc: 0 }
+    ];
+
+    for (const { dr, dc } of directions) {
+        const visited = new Set();
+
+        for (const tile of newTiles) {
+            const key = `${tile.row},${tile.col},${dr},${dc}`;
+            if (visited.has(key)) continue;
+
+            const wordTiles = collectWord(board, tile.row, tile.col, dr, dc);
+            if (wordTiles.length > 1) {
+                words.push({ tiles: wordTiles });
+                wordTiles.forEach(t => visited.add(`${t.row},${t.col},${dr},${dc}`));
+            }
+        }
+    }
+
+    return words;
+}
+
+function collectWord(board, row, col, dr, dc) {
+    let startRow = row;
+    let startCol = col;
+    while (inBounds(startRow - dr, startCol - dc) && (board[startRow - dr][startCol - dc] || hasTempTile(startRow - dr, startCol - dc))) {
+        startRow -= dr;
+        startCol -= dc;
+    }
+
+    const tiles = [];
+    let r = startRow;
+    let c = startCol;
+    while (inBounds(r, c) && (board[r][c] || hasTempTile(r, c))) {
+        tiles.push({
+            row: r,
+            col: c,
+            letter: getLetterAt(r, c)
+        });
+        r += dr;
+        c += dc;
+    }
+
+    return tiles;
+}
+
+function getLetterAt(row, col) {
+    const temp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
+    return temp ? temp.letter : gameState.board[row][col];
+}
+
+function hasTempTile(row, col) {
+    return gameState.temporaryTiles.some(t => t.row === row && t.col === col);
+}
+
+function inBounds(row, col) {
+    return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+}
+
+function getCellBonus(row, col) {
+    for (const [type, positions] of Object.entries(SPECIAL_CELLS)) {
+        if (positions.some(([r, c]) => r === row && c === col)) {
+            return type;
+        }
+    }
+    return null;
+}
+
+const style = document.createElement('style');
+style.textContent = `
+.board-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+    .game-area {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .board {
+        min-width: 560px;
+        margin: 0 auto;
+    }
+
+    .cell {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+}
+`;
+document.head.appendChild(style);
+</script>
 </body>
 </html>
