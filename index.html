@@ -1039,12 +1039,16 @@
                 document.getElementById('myScore').textContent = gameState.players[gameState.myId].score;
             }
             
-            // ניקוי אותיות זמניות - בלי קריאה ל-clearTemporary()!
+            // חישוב כמה אותיות צריך להוסיף
+            const tilesUsed = gameState.temporaryTiles.length;
+            
+            // ניקוי אותיות זמניות - BUG FIX: לא להחזיר את האותיות!
             gameState.temporaryTiles = [];
             gameState.selectedTile = null;
             
-            // הוספת אותיות חדשות (סימולציה)
-            addNewTilesToPlayer();
+            // הוספת אותיות חדשות במקום האותיות שהושמו
+            const newTiles = generateRandomTiles(tilesUsed);
+            gameState.myTiles.push(...newTiles);
             
             // עדכון תצוגה
             updateBoardDisplay();
@@ -1056,9 +1060,8 @@
         }
         
         function addNewTilesToPlayer() {
-            const tilesNeeded = TILES_PER_PLAYER - gameState.myTiles.length;
-            const newTiles = generateRandomTiles(tilesNeeded);
-            gameState.myTiles.push(...newTiles);
+            // מחושב בפונקציה confirmWord() כעת
+            // פונקציה זו לא בשימוש יותר
         }
         
         function generateRandomTiles(count) {
