@@ -1,4 +1,62 @@
-<!DOCTYPE html>
+function placeTile(row, col) {
+            if (gameState.currentPlayer !== gameState.myId) {
+                showMessage('לא התור שלך!', 'error');
+                return;
+            }
+            
+            if (gameState.selectedTile === null) {
+                // החזרת אות זמנית לאותיות השחקן
+                const tempIndex = gameState.temporaryTiles.findIndex(t => t.row === row && t.col === col);
+                if (tempIndex !== -1) {
+                    const tempTile = gameState.temporaryTiles.splice(tempIndex, 1)[0];
+                    gameState.myTiles.push(tempTile.originalTile);
+                    updateBoardDisplay();
+                    renderPlayerTiles();
+                    updateControls();
+                    renderTemporaryTiles();
+                }
+                return;
+            }
+            
+            if (gameState.board[row][col] !== null) {
+                showMessage('המקום תפוס', 'error');
+                return;
+            }
+            
+            const existingTemp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
+            if (existingTemp) {
+                showMessage('יש כבר אות זמנית במקום זה', 'error');
+                return;
+            }
+            
+            const tileIndex = gameState.selectedTile;
+            const tile = gameState.myTiles[tileIndex];
+            const displayLetter = getTileLetter(tile);
+            
+            if (isJoker(tile) && !tile.chosenLetter) {
+                showMessage('תחילה בחר אות לג\'וקר', 'error');
+                return;
+            }
+            
+            // הוספה לאותיות זמניות
+            gameState.temporaryTiles.push({
+                row: row,
+                col: col,
+                letter: displayLetter,
+                points: getTilePoints(tile),
+                isJoker: isJoker(tile),
+                originalTile: tile
+            });
+            
+            // הסרה מהאותיות של השחקן
+            gameState.myTiles.splice(tileIndex, 1);
+            gameState.selectedTile = null;
+            
+            updateBoardDisplay();
+            renderPlayerTiles();
+            updateControls();
+            renderTemporaryTiles();
+        }<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -719,6 +777,13 @@
             const container = document.getElementById('playerTiles');
             container.innerHTML = '';
             
+            // בדיקה שהאותיות קיימות ובמבנה הנכון
+            if (!gameState.myTiles || !Array.isArray(gameState.myTiles)) {
+                console.log('בעיה עם האותיות:', gameState.myTiles);
+                gameState.myTiles = [];
+                return;
+            }
+            
             gameState.myTiles.forEach((tile, index) => {
                 const tileElement = document.createElement('div');
                 tileElement.className = 'tile';
@@ -728,7 +793,7 @@
                 }
                 
                 // טיפול בג'וקר
-                if (tile.letter === '' || tile.letter === null) {
+                if (tile.letter === '' || tile.letter === null || tile === '') {
                     tileElement.className += ' joker';
                     tileElement.textContent = tile.chosenLetter || '?';
                     
@@ -1017,16 +1082,12 @@
             document.getElementById('passBtn').disabled = !isMyTurn || hasTemporaryTiles;
         }
         
-        // אישור מילה - עם לוגים לבדיקה
+        // אישור מילה - נקי ללא הודעות
         function confirmWord() {
             if (gameState.temporaryTiles.length === 0) {
                 showMessage('לא הונחו אותיות חדשות', 'error');
                 return;
             }
-            
-            console.log('=== לפני אישור מילה ===');
-            console.log('אותיות זמניות:', gameState.temporaryTiles.length);
-            console.log('אותיות שחקן:', gameState.myTiles.length);
             
             const score = calculateWordScore();
             const tilesUsed = gameState.temporaryTiles.length;
@@ -1059,18 +1120,9 @@
             gameState.temporaryTiles = [];
             gameState.selectedTile = null;
             
-            console.log('=== אחרי ניקוי זמניות ===');
-            console.log('אותיות זמניות:', gameState.temporaryTiles.length);
-            console.log('אותיות שחקן:', gameState.myTiles.length);
-            console.log('צריך להוסיף:', tilesUsed, 'אותיות חדשות');
-            
             // הוספת אותיות חדשות במקום האותיות שהושמו
             const newTiles = generateRandomTiles(tilesUsed);
             gameState.myTiles.push(...newTiles);
-            
-            console.log('=== אחרי הוספת אותיות חדשות ===');
-            console.log('אותיות חדשות שנוצרו:', newTiles.length);
-            console.log('סך הכל אותיות עכשיו:', gameState.myTiles.length);
             
             // עדכון תצוגה
             updateBoardDisplay();
@@ -1383,7 +1435,11 @@
                     gameState.roomId = data.roomId;
                     gameState.players = data.players;
                     gameState.currentPlayer = data.currentPlayer;
-                    gameState.myTiles = data.myTiles || generateInitialTiles();
+                    
+                    // רק אם אין אותיות או אם השרת מספק אותיות
+                    if (!gameState.myTiles || gameState.myTiles.length === 0) {
+                        gameState.myTiles = data.myTiles || generateInitialTiles();
+                    }
                     
                     updateConnectionStatus(`מחובר לחדר: ${data.roomId}`, 'connected');
                     document.getElementById('roomCode').textContent = data.roomId;
@@ -1414,7 +1470,8 @@
                     updatePlayersList();
                     updateControls();
                     
-                    if (data.myTiles) {
+                    // לא לעדכן אותיות אם יש אותיות זמניות
+                    if (data.myTiles && gameState.temporaryTiles.length === 0) {
                         gameState.myTiles = data.myTiles;
                         renderPlayerTiles();
                     }
@@ -1437,7 +1494,8 @@
                     updateBoardDisplay();
                     updatePlayersList();
                     
-                    if (data.playerId === gameState.myId) {
+                    // רק אם זה השחקן הנוכחי ויש אותיות חדשות מהשרת
+                    if (data.playerId === gameState.myId && data.newTiles) {
                         gameState.myTiles = data.newTiles;
                         renderPlayerTiles();
                         document.getElementById('myScore').textContent = gameState.players[gameState.myId]?.score || 0;
