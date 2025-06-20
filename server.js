@@ -454,8 +454,8 @@ wss.on('connection', (ws) => {
 });
 
 // הפעלת השרת
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`🎯 שרת שבץ נא פועל על פורט ${PORT}`);
     console.log(`🌐 גש לכתובת: http://localhost:${PORT}`);
 });
