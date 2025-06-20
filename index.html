@@ -15,7 +15,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
         }
         
         .container {
@@ -30,45 +30,56 @@
         .header {
             background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
-            padding: 20px;
+            padding: 15px;
             text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 0.9rem;
         }
         
         .game-area {
             display: flex;
             gap: 20px;
-            padding: 20px;
+            padding: 15px;
         }
         
         .board-container {
             flex: 1;
+            min-width: 0;
         }
         
         .board {
             display: grid;
             grid-template-columns: repeat(15, 1fr);
-            gap: 2px;
+            gap: 1px;
             background: #333;
-            padding: 10px;
+            padding: 8px;
             border-radius: 10px;
             max-width: 600px;
             margin: 0 auto;
+            aspect-ratio: 1;
         }
         
         .cell {
-            width: 35px;
-            height: 35px;
             background: #f0f0f0;
             border: 1px solid #ddd;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: bold;
             cursor: pointer;
             position: relative;
-            border-radius: 3px;
+            border-radius: 2px;
             transition: all 0.2s;
+            min-height: 0;
+            aspect-ratio: 1;
         }
         
         .cell:hover {
@@ -103,13 +114,13 @@
         .cell.occupied {
             background: #2d3436;
             color: white;
-            font-size: 16px;
+            font-size: 14px;
         }
         
         .cell.temporary {
             background: #00b894;
             color: white;
-            font-size: 16px;
+            font-size: 14px;
             animation: pulse 1s infinite;
         }
         
@@ -120,29 +131,29 @@
         
         .letter-score {
             position: absolute;
-            bottom: 2px;
-            left: 2px;
-            font-size: 8px;
+            bottom: 1px;
+            left: 1px;
+            font-size: 6px;
             opacity: 0.8;
         }
         
         .sidebar {
-            width: 320px;
+            width: 300px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
         
         .player-info {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             border-left: 4px solid #4CAF50;
         }
         
         .players-list {
             background: #e9ecef;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
         }
         
@@ -163,20 +174,20 @@
         
         .player-tiles {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
         }
         
         .tiles-container {
             display: flex;
-            gap: 5px;
+            gap: 4px;
             flex-wrap: wrap;
             margin-top: 10px;
         }
         
         .tile {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             background: #2d3436;
             color: white;
             display: flex;
@@ -187,6 +198,7 @@
             cursor: pointer;
             position: relative;
             transition: all 0.2s;
+            touch-action: manipulation;
         }
         
         .tile:hover {
@@ -208,20 +220,22 @@
         
         .controls {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px;
+            margin-top: 12px;
             flex-wrap: wrap;
         }
         
         .btn {
-            padding: 10px 15px;
+            padding: 10px 12px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
             flex: 1;
-            min-width: 80px;
+            min-width: 70px;
+            font-size: 14px;
+            touch-action: manipulation;
         }
         
         .btn:disabled {
@@ -257,11 +271,12 @@
         }
         
         .connection-status {
-            padding: 10px;
+            padding: 8px;
             text-align: center;
             font-weight: bold;
             border-radius: 5px;
             margin-bottom: 10px;
+            font-size: 14px;
         }
         
         .connected {
@@ -276,21 +291,22 @@
         
         .game-info {
             background: #e9ecef;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
         }
         
         .room-section {
             background: #fff3cd;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .input-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
         
         .input-group input {
@@ -298,30 +314,34 @@
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 5px;
+            min-width: 120px;
         }
         
         .temp-tiles {
             display: flex;
-            gap: 5px;
+            gap: 4px;
             margin-top: 10px;
             padding: 10px;
             background: rgba(0, 184, 148, 0.1);
             border-radius: 5px;
-            min-height: 50px;
+            min-height: 45px;
             align-items: center;
+            flex-wrap: wrap;
         }
         
         .temp-tiles:empty::before {
             content: "אותיות זמניות יופיעו כאן";
             color: #6c757d;
             font-style: italic;
+            font-size: 14px;
         }
         
         .message {
-            padding: 10px;
-            margin: 10px 0;
+            padding: 8px;
+            margin: 8px 0;
             border-radius: 5px;
             text-align: center;
+            font-size: 14px;
         }
         
         .message.success {
@@ -338,32 +358,122 @@
             background: #d1ecf1;
             color: #0c5460;
         }
+        
+        /* נייד - מסכים קטנים */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header p {
+                font-size: 0.8rem;
+            }
+            
+            .game-area {
+                flex-direction: column;
+                gap: 15px;
+                padding: 10px;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: -1;
+            }
+            
+            .board {
+                max-width: 100%;
+                padding: 5px;
+                gap: 0.5px;
+            }
+            
+            .cell {
+                font-size: 8px;
+                min-height: 20px;
+            }
+            
+            .cell.occupied,
+            .cell.temporary {
+                font-size: 12px;
+            }
+            
+            .letter-score {
+                font-size: 5px;
+            }
+            
+            .tile {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .controls {
+                gap: 5px;
+            }
+            
+            .btn {
+                padding: 12px 8px;
+                font-size: 13px;
+                min-width: 60px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .input-group input {
+                min-width: auto;
+            }
+            
+            .players-list,
+            .player-info,
+            .player-tiles,
+            .game-info {
+                padding: 10px;
+            }
+            
+            .temp-tiles {
+                min-height: 50px;
+            }
+        }
+        
+        /* נייד קטן מאוד */
+        @media (max-width: 480px) {
+            .board {
+                padding: 3px;
+            }
+            
+            .cell {
+                font-size: 7px;
+                min-height: 18px;
+            }
+            
+            .cell.occupied,
+            .cell.temporary {
+                font-size: 10px;
+            }
+            
+            .tile {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .btn {
+                padding: 10px 6px;
+                font-size: 12px;
+            }
+            
+            .header {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.3rem;
+            }
+        }
     </style>
-
-<style>
-.board-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-@media (max-width: 768px) {
-    .game-area {
-        flex-direction: column;
-    }
-    .sidebar {
-        width: 100%;
-    }
-    .board {
-        min-width: 560px;
-        margin: 0 auto;
-    }
-    .cell {
-        width: 40px;
-        height: 40px;
-        font-size: 14px;
-    }
-}
-</style>
-
 </head>
 <body>
     <div class="container">
@@ -425,102 +535,10 @@
     </div>
 
     <script>
-
-function calculateWordScore() {
-    const board = gameState.board;
-    const newTiles = gameState.temporaryTiles;
-    const allWords = findAllWordsFormed(board, newTiles);
-    let totalScore = 0;
-
-    for (const word of allWords) {
-        let wordScore = 0;
-        let wordMultiplier = 1;
-
-        for (const tile of word.tiles) {
-            const isNew = newTiles.some(t => t.row === tile.row && t.col === tile.col);
-            let letterScore = LETTER_DISTRIBUTION[tile.letter]?.points || 0;
-
-            if (isNew) {
-                const bonusType = getCellBonus(tile.row, tile.col);
-                if (bonusType === 'letter-double') letterScore *= 2;
-                if (bonusType === 'letter-triple') letterScore *= 3;
-                if (bonusType === 'word-double') wordMultiplier *= 2;
-                if (bonusType === 'word-triple') wordMultiplier *= 3;
-            }
-
-            wordScore += letterScore;
-        }
-
-        totalScore += wordScore * wordMultiplier;
-    }
-
-    if (newTiles.length === 7) {
-        totalScore += 50;
-    }
-
-    return totalScore;
-}
-
-function findAllWordsFormed(board, newTiles) {
-    const words = [];
-    const directions = [{ dr: 0, dc: 1 }, { dr: 1, dc: 0 }];
-    for (const { dr, dc } of directions) {
-        const visited = new Set();
-        for (const tile of newTiles) {
-            const key = `${tile.row},${tile.col},${dr},${dc}`;
-            if (visited.has(key)) continue;
-            const wordTiles = collectWord(board, tile.row, tile.col, dr, dc);
-            if (wordTiles.length > 1) {
-                words.push({ tiles: wordTiles });
-                wordTiles.forEach(t => visited.add(`${t.row},${t.col},${dr},${dc}`));
-            }
-        }
-    }
-    return words;
-}
-
-function collectWord(board, row, col, dr, dc) {
-    let startRow = row;
-    let startCol = col;
-    while (inBounds(startRow - dr, startCol - dc) && (board[startRow - dr][startCol - dc] || hasTempTile(startRow - dr, startCol - dc))) {
-        startRow -= dr;
-        startCol -= dc;
-    }
-    const tiles = [];
-    let r = startRow, c = startCol;
-    while (inBounds(r, c) && (board[r][c] || hasTempTile(r, c))) {
-        tiles.push({ row: r, col: c, letter: getLetterAt(r, c) });
-        r += dr; c += dc;
-    }
-    return tiles;
-}
-
-function getLetterAt(row, col) {
-    const temp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
-    return temp ? temp.letter : gameState.board[row][col];
-}
-
-function hasTempTile(row, col) {
-    return gameState.temporaryTiles.some(t => t.row === row && t.col === col);
-}
-
-function inBounds(row, col) {
-    return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
-}
-
-function getCellBonus(row, col) {
-    for (const [type, positions] of Object.entries(SPECIAL_CELLS)) {
-        if (positions.some(([r, c]) => r === row && c === col)) {
-            return type;
-        }
-    }
-    return null;
-}
-
         // הגדרות המשחק
         const BOARD_SIZE = 15;
         const TILES_PER_PLAYER = 7;
-        const WS_URL = 'wss://scrabble-hebrew-game.onrender.com'; // ישתנה לפי השרת
+        const WS_URL = 'wss://scrabble-hebrew-game.onrender.com';
         
         // אותיות ונקודות
         const LETTER_DISTRIBUTION = {
@@ -546,7 +564,7 @@ function getCellBonus(row, col) {
             'ר': { count: 6, points: 2 },
             'ש': { count: 3, points: 3 },
             'ת': { count: 6, points: 2 },
-            '': { count: 2, points: 0 } // אותיות ריקות
+            '': { count: 2, points: 0 }
         };
         
         // מקדמי הלוח
@@ -566,7 +584,7 @@ function getCellBonus(row, col) {
             myId: null,
             roomId: null,
             isConnected: false,
-            temporaryTiles: [], // אותיות שהונחו זמנית במהלך הנוכחי
+            temporaryTiles: [],
             selectedTile: null
         };
         
@@ -584,7 +602,6 @@ function getCellBonus(row, col) {
                     cell.dataset.row = row;
                     cell.dataset.col = col;
                     
-                    // הוספת מקדמים מיוחדים
                     if (row === 7 && col === 7) {
                         cell.className += ' center';
                         cell.textContent = '★';
@@ -617,7 +634,6 @@ function getCellBonus(row, col) {
             }
         }
         
-        // יצירת אותיות שחקן
         function renderPlayerTiles() {
             const container = document.getElementById('playerTiles');
             container.innerHTML = '';
@@ -643,7 +659,6 @@ function getCellBonus(row, col) {
             document.getElementById('myTilesCount').textContent = gameState.myTiles.length;
         }
         
-        // בחירת אות
         function selectTile(index) {
             if (gameState.currentPlayer !== gameState.myId) {
                 showMessage('לא התור שלך!', 'error');
@@ -654,7 +669,6 @@ function getCellBonus(row, col) {
             renderPlayerTiles();
         }
         
-        // הצבת אות על הלוח
         function placeTile(row, col) {
             if (gameState.currentPlayer !== gameState.myId) {
                 showMessage('לא התור שלך!', 'error');
@@ -662,7 +676,6 @@ function getCellBonus(row, col) {
             }
             
             if (gameState.selectedTile === null) {
-                // אם לחצו על משבצת עם אות זמנית, הסר אותה
                 const tempIndex = gameState.temporaryTiles.findIndex(t => t.row === row && t.col === col);
                 if (tempIndex !== -1) {
                     const tempTile = gameState.temporaryTiles.splice(tempIndex, 1)[0];
@@ -680,14 +693,12 @@ function getCellBonus(row, col) {
                 return;
             }
             
-            // בדיקה אם יש כבר אות זמנית במקום
             const existingTemp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
             if (existingTemp) {
                 showMessage('יש כבר אות זמנית במקום זה', 'error');
                 return;
             }
             
-            // הצבה זמנית
             const letter = gameState.myTiles[gameState.selectedTile];
             gameState.temporaryTiles.push({
                 row: row,
@@ -696,27 +707,22 @@ function getCellBonus(row, col) {
                 points: LETTER_DISTRIBUTION[letter]?.points || 0
             });
             
-            // הסרת האות מהשחקן
             gameState.myTiles.splice(gameState.selectedTile, 1);
             gameState.selectedTile = null;
             
-            // עדכון תצוגה
             updateBoardDisplay();
             renderPlayerTiles();
             updateControls();
             renderTemporaryTiles();
         }
         
-        // עדכון תצוגת הלוח
         function updateBoardDisplay() {
             const cells = document.querySelectorAll('.cell');
             cells.forEach((cell, index) => {
                 const row = Math.floor(index / BOARD_SIZE);
                 const col = index % BOARD_SIZE;
                 
-                // בדיקת אותיות קבועות
                 const permanentLetter = gameState.board[row][col];
-                // בדיקת אותיות זמניות
                 const tempTile = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
                 
                 if (permanentLetter) {
@@ -726,12 +732,10 @@ function getCellBonus(row, col) {
                     cell.textContent = tempTile.letter;
                     cell.className = cell.className.replace(/\s*(occupied|temporary)/g, '') + ' temporary';
                 } else {
-                    // החזרת התוכן המקורי למשבצות מיוחדות
                     cell.className = cell.className.replace(/\s*(occupied|temporary)/g, '');
                     if (row === 7 && col === 7) {
                         cell.textContent = '★';
                     } else {
-                        // החזרת הטקסט המקורי למקדמים
                         for (const [type, positions] of Object.entries(SPECIAL_CELLS)) {
                             if (positions.some(([r, c]) => r === row && c === col)) {
                                 switch (type) {
@@ -751,7 +755,6 @@ function getCellBonus(row, col) {
                                 break;
                             }
                         }
-                        // אם זה לא משבצת מיוחדת, השאר ריק
                         if (!cell.textContent || (!cell.textContent.includes('×') && cell.textContent !== '★')) {
                             cell.textContent = '';
                         }
@@ -760,7 +763,6 @@ function getCellBonus(row, col) {
             });
         }
         
-        // הצגת אותיות זמניות בנפרד
         function renderTemporaryTiles() {
             const container = document.getElementById('tempTiles');
             container.innerHTML = '';
@@ -779,7 +781,6 @@ function getCellBonus(row, col) {
             });
         }
         
-        // עדכון כפתורי בקרה
         function updateControls() {
             const isMyTurn = gameState.currentPlayer === gameState.myId;
             const hasTemporaryTiles = gameState.temporaryTiles.length > 0;
@@ -790,17 +791,15 @@ function getCellBonus(row, col) {
             document.getElementById('passBtn').disabled = !isMyTurn || hasTemporaryTiles;
         }
         
-        // אישור מילה
+        // אישור מילה - תוקן!
         function confirmWord() {
             if (gameState.temporaryTiles.length === 0) {
                 showMessage('לא הונחו אותיות חדשות', 'error');
                 return;
             }
             
-            // חישוב ניקוד
             const score = calculateWordScore();
             
-            // שליחה לשרת
             if (ws) {
                 ws.send(JSON.stringify({
                     type: 'play_word',
@@ -814,9 +813,9 @@ function getCellBonus(row, col) {
                 gameState.board[tile.row][tile.col] = tile.letter;
             });
             
-            // ניקוי אותיות זמניות
+            // ניקוי אותיות זמניות - בלי לקרוא ל-clearTemporary()!
             gameState.temporaryTiles = [];
-gameState.selectedTile = null;
+            gameState.selectedTile = null;
             
             // עדכון תצוגה
             updateBoardDisplay();
@@ -827,102 +826,118 @@ gameState.selectedTile = null;
         }
         
         // חישוב ניקוד מילה
-// פונקציה זו תחליף את calculateWordScore הקיימת אצלך
+        function calculateWordScore() {
+            const board = gameState.board;
+            const newTiles = gameState.temporaryTiles;
+            const allWords = findAllWordsFormed(board, newTiles);
+            let totalScore = 0;
 
+            for (const word of allWords) {
+                let wordScore = 0;
+                let wordMultiplier = 1;
 
-        totalScore += wordScore * wordMultiplier;
-    }
+                for (const tile of word.tiles) {
+                    const isNew = newTiles.some(t => t.row === tile.row && t.col === tile.col);
+                    let letterScore = LETTER_DISTRIBUTION[tile.letter]?.points || 0;
 
-    if (newTiles.length === 7) {
-        totalScore += 50;
-    }
+                    if (isNew) {
+                        const bonusType = getCellBonus(tile.row, tile.col);
+                        if (bonusType === 'letter-double') letterScore *= 2;
+                        if (bonusType === 'letter-triple') letterScore *= 3;
+                        if (bonusType === 'word-double') wordMultiplier *= 2;
+                        if (bonusType === 'word-triple') wordMultiplier *= 3;
+                    }
 
-    return totalScore;
-}
+                    wordScore += letterScore;
+                }
 
-// מוצא את כל המילים החדשות שנוצרו
-function findAllWordsFormed(board, newTiles) {
-    const words = [];
-    const directions = [
-        { dr: 0, dc: 1 },  // אופקי
-        { dr: 1, dc: 0 }   // אנכי
-    ];
-
-    for (const { dr, dc } of directions) {
-        const visited = new Set();
-
-        for (const tile of newTiles) {
-            const key = `${tile.row},${tile.col},${dr},${dc}`;
-            if (visited.has(key)) continue;
-
-            const wordTiles = collectWord(board, tile.row, tile.col, dr, dc);
-            if (wordTiles.length > 1) {
-                words.push({ tiles: wordTiles });
-                wordTiles.forEach(t => visited.add(`${t.row},${t.col},${dr},${dc}`));
+                totalScore += wordScore * wordMultiplier;
             }
+
+            if (newTiles.length === 7) {
+                totalScore += 50;
+            }
+
+            return totalScore;
         }
-    }
 
-    return words;
-}
+        function findAllWordsFormed(board, newTiles) {
+            const words = [];
+            const directions = [
+                { dr: 0, dc: 1 },
+                { dr: 1, dc: 0 }
+            ];
 
-// אוספת את כל האותיות של מילה בכיוון מסוים
-function collectWord(board, row, col, dr, dc) {
-    let startRow = row;
-    let startCol = col;
-    while (inBounds(startRow - dr, startCol - dc) && (board[startRow - dr][startCol - dc] || hasTempTile(startRow - dr, startCol - dc))) {
-        startRow -= dr;
-        startCol -= dc;
-    }
+            for (const { dr, dc } of directions) {
+                const visited = new Set();
 
-    const tiles = [];
-    let r = startRow;
-    let c = startCol;
-    while (inBounds(r, c) && (board[r][c] || hasTempTile(r, c))) {
-        tiles.push({
-            row: r,
-            col: c,
-            letter: getLetterAt(r, c)
-        });
-        r += dr;
-        c += dc;
-    }
+                for (const tile of newTiles) {
+                    const key = `${tile.row},${tile.col},${dr},${dc}`;
+                    if (visited.has(key)) continue;
 
-    return tiles;
-}
+                    const wordTiles = collectWord(board, tile.row, tile.col, dr, dc);
+                    if (wordTiles.length > 1) {
+                        words.push({ tiles: wordTiles });
+                        wordTiles.forEach(t => visited.add(`${t.row},${t.col},${dr},${dc}`));
+                    }
+                }
+            }
 
-function getLetterAt(row, col) {
-    const temp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
-    return temp ? temp.letter : gameState.board[row][col];
-}
-
-function hasTempTile(row, col) {
-    return gameState.temporaryTiles.some(t => t.row === row && t.col === col);
-}
-
-function inBounds(row, col) {
-    return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
-}
-
-// זיהוי בונוס משבצת לפי מיקום
-function getCellBonus(row, col) {
-    for (const [type, positions] of Object.entries(SPECIAL_CELLS)) {
-        if (positions.some(([r, c]) => r === row && c === col)) {
-            return type;
+            return words;
         }
-    }
-    return null;
-}
 
-        // ניקוי אותיות זמניות
+        function collectWord(board, row, col, dr, dc) {
+            let startRow = row;
+            let startCol = col;
+            while (inBounds(startRow - dr, startCol - dc) && (board[startRow - dr][startCol - dc] || hasTempTile(startRow - dr, startCol - dc))) {
+                startRow -= dr;
+                startCol -= dc;
+            }
+
+            const tiles = [];
+            let r = startRow;
+            let c = startCol;
+            while (inBounds(r, c) && (board[r][c] || hasTempTile(r, c))) {
+                tiles.push({
+                    row: r,
+                    col: c,
+                    letter: getLetterAt(r, c)
+                });
+                r += dr;
+                c += dc;
+            }
+
+            return tiles;
+        }
+
+        function getLetterAt(row, col) {
+            const temp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
+            return temp ? temp.letter : gameState.board[row][col];
+        }
+
+        function hasTempTile(row, col) {
+            return gameState.temporaryTiles.some(t => t.row === row && t.col === col);
+        }
+
+        function inBounds(row, col) {
+            return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+        }
+
+        function getCellBonus(row, col) {
+            for (const [type, positions] of Object.entries(SPECIAL_CELLS)) {
+                if (positions.some(([r, c]) => r === row && c === col)) {
+                    return type;
+                }
+            }
+            return null;
+        }
+
         function clearTemporary() {
-            // החזרת האותיות לשחקן
             gameState.temporaryTiles.forEach(tile => {
                 gameState.myTiles.push(tile.letter);
             });
             
             gameState.temporaryTiles = [];
-gameState.selectedTile = null;
             gameState.selectedTile = null;
             
             updateBoardDisplay();
@@ -931,7 +946,6 @@ gameState.selectedTile = null;
             updateControls();
         }
         
-        // החלפת אותיות
         function exchangeTiles() {
             if (gameState.selectedTile === null) {
                 showMessage('בחר אותיות להחלפה', 'error');
@@ -949,7 +963,6 @@ gameState.selectedTile = null;
             showMessage('אותיות הוחלפו', 'info');
         }
         
-        // דילוג תור
         function passTurn() {
             if (ws) {
                 ws.send(JSON.stringify({
@@ -960,7 +973,6 @@ gameState.selectedTile = null;
             showMessage('התור הועבר', 'info');
         }
         
-        // הצגת הודעות
         function showMessage(text, type = 'info') {
             const existingMessage = document.querySelector('.message');
             if (existingMessage) {
@@ -981,7 +993,6 @@ gameState.selectedTile = null;
             }, 3000);
         }
         
-        // עדכון רשימת שחקנים
         function updatePlayersList() {
             const container = document.getElementById('playersList');
             container.innerHTML = '';
@@ -1002,7 +1013,6 @@ gameState.selectedTile = null;
             });
         }
         
-        // חיבור לחדר
         function joinRoom() {
             const roomId = document.getElementById('roomInput').value.trim() || generateRoomId();
             const playerName = document.getElementById('nameInput').value.trim() || 'שחקן אנונימי';
@@ -1014,7 +1024,6 @@ gameState.selectedTile = null;
             return Math.random().toString(36).substring(2, 8).toUpperCase();
         }
         
-        // חיבור WebSocket
         function connectToRoom(roomId, playerName) {
             try {
                 ws = new WebSocket(WS_URL);
@@ -1023,7 +1032,6 @@ gameState.selectedTile = null;
                     gameState.roomId = roomId;
                     gameState.isConnected = true;
                     
-                    // שליחת בקשה להצטרפות לחדר
                     ws.send(JSON.stringify({
                         type: 'join_room',
                         roomId: roomId,
@@ -1051,12 +1059,10 @@ gameState.selectedTile = null;
                 
             } catch (error) {
                 console.error('Connection error:', error);
-                // אם אין שרת, הפעל במצב דמו
                 startDemoMode(roomId, playerName);
             }
         }
         
-        // טיפול בהודעות מהשרת
         function handleServerMessage(data) {
             switch (data.type) {
                 case 'room_joined':
@@ -1143,20 +1149,17 @@ gameState.selectedTile = null;
                     break;
             }
             
-            // עדכון מידע כללי
             if (data.tilesLeft !== undefined) {
                 document.getElementById('tilesLeft').textContent = data.tilesLeft;
             }
         }
         
-        // עדכון סטטוס חיבור
         function updateConnectionStatus(text, status) {
             const statusElement = document.getElementById('connectionStatus');
             statusElement.textContent = text;
             statusElement.className = `connection-status ${status}`;
         }
         
-        // מצב דמו (ללא שרת)
         function startDemoMode(roomId, playerName) {
             gameState.myId = 'demo_player';
             gameState.roomId = roomId;
@@ -1180,19 +1183,16 @@ gameState.selectedTile = null;
             showMessage('פועל במצב דמו (ללא שרת)', 'info');
         }
         
-        // יצירת אותיות התחלתיות
         function generateInitialTiles() {
             const tiles = [];
             const availableLetters = [];
             
-            // יצירת רשימת אותיות זמינות
             for (const [letter, data] of Object.entries(LETTER_DISTRIBUTION)) {
                 for (let i = 0; i < data.count; i++) {
                     availableLetters.push(letter);
                 }
             }
             
-            // בחירת 7 אותיות אקראיות
             for (let i = 0; i < TILES_PER_PLAYER; i++) {
                 if (availableLetters.length > 0) {
                     const randomIndex = Math.floor(Math.random() * availableLetters.length);
@@ -1203,7 +1203,6 @@ gameState.selectedTile = null;
             return tiles;
         }
         
-        // אתחול המשחק
         document.addEventListener('DOMContentLoaded', function() {
             createBoard();
             updateControls();
