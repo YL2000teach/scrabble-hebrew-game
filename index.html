@@ -1,5 +1,5 @@
 case 'word_played':
-                    showDebugInfo(`word_played התקבל - playerId: ${data.playerId}, myId: ${gameState.myId}`);
+                    console.log('word_played message received');
                     gameState.board = data.board;
                     gameState.players = data.players;
                     
@@ -8,11 +8,15 @@ case 'word_played':
                     
                     if (data.playerId === gameState.myId) {
                         document.getElementById('myScore').textContent = gameState.players[gameState.myId]?.score || 0;
-                        showDebugInfo(`עדכנתי את הניקוד שלי: ${gameState.players[gameState.myId]?.score}`);
                     }
                     
                     // עדכון מספר האותיות בשק
-                    if (data.tilesLeft !== undefine<!DOCTYPE html>
+                    if (data.tilesLeft !== undefined) {
+                        document.getElementById('tilesLeft').textContent = data.tilesLeft;
+                    }
+                    
+                    showMessage(`${data.playerName} שיחק מילה וקיבל ${data.score} נקודות`, 'success');
+                    break;<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -568,14 +572,15 @@ case 'word_played':
             <p>משחק מילים עברי מקוון</p>
         </div>
         
-        <div class="room-section" style="display: none;" id="roomSection">
-            <h3>התחל משחק</h3>
+        <div class="room-section">
+            <h3>הצטרף למשחק</h3>
             <div class="input-group">
+                <input type="text" id="roomInput" placeholder="הכנס קוד חדר (או השאר ריק ליצירת חדר חדש)">
                 <input type="text" id="nameInput" placeholder="השם שלך" maxlength="20">
-                <button class="btn btn-primary" onclick="startGame()">התחל משחק</button>
+                <button class="btn btn-primary" onclick="joinRoom()">הצטרף למשחק</button>
             </div>
-            <div class="connection-status demo-mode" id="connectionStatus">
-                מוכן להתחלת משחק
+            <div class="connection-status disconnected" id="connectionStatus">
+                לא מחובר
             </div>
         </div>
         
@@ -1372,35 +1377,10 @@ case 'word_played':
             }, 4000);
         }
         
-        // **תוספת**: פונקציה להצגת דיבוג
+        // **הסרה**: הסרת פונקציית הדיבוג שגורמת לשורה הכחולה
         function showDebugInfo(info) {
-            const debugDiv = document.getElementById('debugInfo') || createDebugDiv();
-            debugDiv.innerHTML = `
-                <strong>מידע דיבוג:</strong><br>
-                ${info}<br>
-                <small>${new Date().toLocaleTimeString()}</small>
-            `;
+            // דיבוג רק בקונסול, לא על המסך
             console.log('DEBUG:', info);
-        }
-        
-        function createDebugDiv() {
-            const div = document.createElement('div');
-            div.id = 'debugInfo';
-            div.style.cssText = `
-                position: fixed;
-                top: 10px;
-                left: 10px;
-                background: #333;
-                color: white;
-                padding: 10px;
-                border-radius: 5px;
-                font-size: 12px;
-                max-width: 300px;
-                z-index: 1000;
-                opacity: 0.9;
-            `;
-            document.body.appendChild(div);
-            return div;
         }
         
         function updatePlayersList() {
@@ -1429,19 +1409,6 @@ case 'word_played':
         document.addEventListener('DOMContentLoaded', function() {
             createBoard();
             updateControls();
-            
-            // הסתר את החלק העליון ותתחיל אוטומטית
-            const roomSection = document.getElementById('roomSection');
-            if (roomSection) {
-                roomSection.style.display = 'none';
-            }
-            
-            // התחל משחק אוטומטית
-            setTimeout(() => {
-                const roomId = generateRoomId();
-                const playerName = 'שחקן_' + Math.random().toString(36).substring(2, 7);
-                connectToRoom(roomId, playerName);
-            }, 500);
         });
     </script>
 </body>
