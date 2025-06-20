@@ -1,0 +1,20 @@
+{
+  "name": "scrabble-hebrew-online",
+  "version": "1.0.0",
+  "description": "משחק שבץ נא עברי אונליין",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["scrabble", "hebrew", "game", "websocket"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.13.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
