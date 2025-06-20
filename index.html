@@ -1004,6 +1004,12 @@
                 return;
             }
             
+            // בדיקת תקינות הצבה
+            if (!isValidPlacement()) {
+                showMessage('האותיות חייבות להיות קשורות למרכז או לאותיות קיימות', 'error');
+                return;
+            }
+            
             const score = calculateWordScore();
             
             if (ws && ws.readyState === WebSocket.OPEN) {
@@ -1014,6 +1020,7 @@
                 }));
             }
             
+            // עדכון מקומי (במצב דמו או לפני קבלת אישור מהשרת)
             gameState.temporaryTiles.forEach(tile => {
                 gameState.board[tile.row][tile.col] = {
                     letter: tile.letter,
@@ -1022,19 +1029,195 @@
                 };
             });
             
+            // עדכון ניקוד במצב דמו
+            if (!gameState.isConnected) {
+                if (gameState.players[gameState.myId]) {
+                    gameState.players[gameState.myId].score += score;
+                    document.getElementById('myScore').textContent = gameState.players[gameState.myId].score;
+                }
+            }
+            
             gameState.temporaryTiles = [];
             gameState.selectedTile = null;
             
             updateBoardDisplay();
             renderTemporaryTiles();
             updateControls();
+            updatePlayersList();
             
             showMessage(`נוספו ${score} נקודות!`, 'success');
         }
         
+        function isValidPlacement() {
+            if (gameState.temporaryTiles.length === 0) return false;
+            
+            // בדיקה שכל האותיות הזמניות נמצאות באותה שורה או עמודה
+            const rows = [...new Set(gameState.temporaryTiles.map(t => t.row))];
+            const cols = [...new Set(gameState.temporaryTiles.map(t => t.col))];
+            
+            if (rows.length > 1 && cols.length > 1) {
+                showMessage('האותיות חייבות להיות באותה שורה או עמודה', 'error');
+                return false;
+            }
+            
+            // אם זה המילה הראשונה, צריכה לעבור דרך המרכז
+            const hasExistingTiles = gameState.board.some(row => row.some(cell => cell !== null));
+            if (!hasExistingTiles) {
+                const touchesCenter = gameState.temporaryTiles.some(tile => tile.row === 7 && tile.col === 7);
+                if (!touchesCenter) {
+                    showMessage('המילה הראשונה חייבת לעבור דרך המרכז (★)', 'error');
+                    return false;
+                }
+                return true;
+            }
+            
+            // אחרת, צריכה להיות קשורה לאותיות קיימות
+            const touchesExisting = gameState.temporaryTiles.some(tempTile => {
+                const { row, col } = tempTile;
+                const neighbors = [
+                    [row-1, col], [row+1, col], [row, col-1], [row, col+1]
+                ];
+                
+                return neighbors.some(([r, c]) => {
+                    if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
+                        return gameState.board[r][c] !== null;
+                    }
+                    return false;
+                });
+            });
+            
+            if (!touchesExisting) {
+                showMessage('האותיות חייבות להיות קשורות לאותיות קיימות', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
         function calculateWordScore() {
-            // חישוב בסיסי - 10 נקודות לכל אות (נשפר בהמשך)
-            return gameState.temporaryTiles.length * 10;
+            const board = gameState.board;
+            const newTiles = gameState.temporaryTiles;
+            const allWords = findAllWordsFormed(board, newTiles);
+            let totalScore = 0;
+
+            for (const word of allWords) {
+                let wordScore = 0;
+                let wordMultiplier = 1;
+
+                for (const tile of word.tiles) {
+                    const isNew = newTiles.some(t => t.row === tile.row && t.col === tile.col);
+                    let letterScore = 0;
+                    
+                    if (isNew) {
+                        // אות חדשה - לקח מ-temporaryTiles
+                        const tempTile = newTiles.find(t => t.row === tile.row && t.col === tile.col);
+                        letterScore = tempTile ? tempTile.points : 0;
+                        
+                        // החלת בונוסים על אותיות חדשות בלבד
+                        const bonusType = getCellBonus(tile.row, tile.col);
+                        if (bonusType === 'letter-double') letterScore *= 2;
+                        if (bonusType === 'letter-triple') letterScore *= 3;
+                        if (bonusType === 'word-double') wordMultiplier *= 2;
+                        if (bonusType === 'word-triple') wordMultiplier *= 3;
+                    } else {
+                        // אות קיימת על הלוח - כוללת בניקוד אבל ללא בונוסים
+                        const boardTile = gameState.board[tile.row][tile.col];
+                        if (boardTile) {
+                            if (typeof boardTile === 'string') {
+                                letterScore = LETTER_DISTRIBUTION[boardTile]?.points || 0;
+                            } else if (boardTile.isJoker && boardTile.chosenLetter) {
+                                letterScore = LETTER_DISTRIBUTION[boardTile.chosenLetter]?.points || 0;
+                            } else {
+                                letterScore = LETTER_DISTRIBUTION[boardTile.letter]?.points || 0;
+                            }
+                        } else {
+                            letterScore = LETTER_DISTRIBUTION[tile.letter]?.points || 0;
+                        }
+                    }
+
+                    wordScore += letterScore;
+                }
+
+                totalScore += wordScore * wordMultiplier;
+            }
+
+            // בונוס על שימוש בכל 7 האותיות
+            if (newTiles.length === 7) {
+                totalScore += 50;
+            }
+
+            return totalScore;
+        }
+
+        function findAllWordsFormed(board, newTiles) {
+            const words = [];
+            const directions = [
+                { dr: 0, dc: 1 }, // אופקי
+                { dr: 1, dc: 0 }  // אנכי
+            ];
+
+            for (const { dr, dc } of directions) {
+                const visited = new Set();
+
+                for (const tile of newTiles) {
+                    const key = `${tile.row},${tile.col},${dr},${dc}`;
+                    if (visited.has(key)) continue;
+
+                    const wordTiles = collectWord(board, tile.row, tile.col, dr, dc);
+                    if (wordTiles.length > 1) {
+                        words.push({ tiles: wordTiles });
+                        wordTiles.forEach(t => visited.add(`${t.row},${t.col},${dr},${dc}`));
+                    }
+                }
+            }
+
+            return words;
+        }
+
+        function collectWord(board, row, col, dr, dc) {
+            let startRow = row;
+            let startCol = col;
+            while (inBounds(startRow - dr, startCol - dc) && (board[startRow - dr][startCol - dc] || hasTempTile(startRow - dr, startCol - dc))) {
+                startRow -= dr;
+                startCol -= dc;
+            }
+
+            const tiles = [];
+            let r = startRow;
+            let c = startCol;
+            while (inBounds(r, c) && (board[r][c] || hasTempTile(r, c))) {
+                tiles.push({
+                    row: r,
+                    col: c,
+                    letter: getLetterAt(r, c)
+                });
+                r += dr;
+                c += dc;
+            }
+
+            return tiles;
+        }
+
+        function getLetterAt(row, col) {
+            const temp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
+            return temp ? temp.letter : gameState.board[row][col];
+        }
+
+        function hasTempTile(row, col) {
+            return gameState.temporaryTiles.some(t => t.row === row && t.col === col);
+        }
+
+        function inBounds(row, col) {
+            return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+        }
+
+        function getCellBonus(row, col) {
+            for (const [type, positions] of Object.entries(SPECIAL_CELLS)) {
+                if (positions.some(([r, c]) => r === row && c === col)) {
+                    return type;
+                }
+            }
+            return null;
         }
         
         function clearTemporary() {
