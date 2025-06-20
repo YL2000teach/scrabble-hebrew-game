@@ -43,30 +43,31 @@ app.get('/', (req, res) => {
 // הגדרות המשחק
 const TILES_PER_PLAYER = 7;
 const LETTER_DISTRIBUTION = {
-    'א': { count: 8, points: 1 },
-    'ב': { count: 3, points: 3 },
-    'ג': { count: 2, points: 4 },
-    'ד': { count: 3, points: 3 },
+    'א': { count: 6, points: 2 },
+    'ב': { count: 4, points: 3 },
+    'ג': { count: 2, points: 5 },
+    'ד': { count: 4, points: 3 },
     'ה': { count: 8, points: 1 },
-    'ו': { count: 6, points: 2 },
+    'ו': { count: 12, points: 1 },
     'ז': { count: 1, points: 8 },
-    'ח': { count: 2, points: 4 },
-    'ט': { count: 2, points: 4 },
-    'י': { count: 8, points: 1 },
-    'כ': { count: 4, points: 2 },
+    'ח': { count: 3, points: 4 },
+    'ט': { count: 1, points: 8 },
+    'י': { count: 10, points: 1 },
+    'כ': { count: 2, points: 5 },
     'ל': { count: 6, points: 2 },
     'מ': { count: 6, points: 2 },
-    'נ': { count: 6, points: 2 },
-    'ס': { count: 2, points: 4 },
-    'ע': { count: 2, points: 4 },
-    'פ': { count: 2, points: 4 },
+    'נ': { count: 4, points: 3 },
+    'ס': { count: 1, points: 8 },
+    'ע': { count: 2, points: 5 },
+    'פ': { count: 3, points: 4 },
     'צ': { count: 1, points: 8 },
-    'ק': { count: 1, points: 8 },
-    'ר': { count: 6, points: 2 },
-    'ש': { count: 3, points: 3 },
-    'ת': { count: 6, points: 2 },
-    '': { count: 2, points: 0 } // ג'וקרים
+    'ק': { count: 3, points: 4 },
+    'ר': { count: 8, points: 1 },
+    'ש': { count: 6, points: 2 },
+    'ת': { count: 9, points: 1 },
+    '': { count: 2, points: 0 } // Jokers
 };
+
 
 // משחקים פעילים
 const games = new Map();
