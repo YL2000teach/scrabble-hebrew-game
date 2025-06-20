@@ -191,6 +191,31 @@ class ScrabbleGame {
             return { success: false, error: 'לא הוגדרו אותיות' };
         }
         
+        // **תיקון קריטי**: הסרת האותיות שהשתמשו בהן מהשחקן
+        console.log(`Player ${playerId} tiles before: ${player.tiles.length}`);
+        
+        // הסרת האותיות על בסיס המיקום והתוכן
+        tiles.forEach(playedTile => {
+            // מצא אות דומה במגש השחקן
+            const tileIndex = player.tiles.findIndex(tile => {
+                if (typeof tile === 'string' && typeof playedTile.originalTile === 'string') {
+                    return tile === playedTile.originalTile;
+                }
+                if (typeof tile === 'object' && typeof playedTile.originalTile === 'object') {
+                    return tile.letter === playedTile.originalTile.letter && 
+                           tile.chosenLetter === playedTile.originalTile.chosenLetter;
+                }
+                return false;
+            });
+            
+            if (tileIndex !== -1) {
+                player.tiles.splice(tileIndex, 1);
+                console.log(`Removed tile at index ${tileIndex}`);
+            }
+        });
+        
+        console.log(`Player ${playerId} tiles after removal: ${player.tiles.length}`);
+        
         // הצבת האותיות על הלוח
         tiles.forEach(tile => {
             if (tile.row >= 0 && tile.row < 15 && tile.col >= 0 && tile.col < 15) {
@@ -205,11 +230,9 @@ class ScrabbleGame {
         // עדכון ניקוד
         player.score += score;
         
-        // **תיקון**: הסרת האותיות מהשחקן לפני חלוקת אותיות חדשות
-        // (בהנחה שהאותיות כבר הוסרו בצד הלקוח)
-        
-        // חלוקת אותיות חדשות
+        // חלוקת אותיות חדשות (רק כמה שהסירו)
         const newTiles = this.dealTiles(playerId, tiles.length);
+        console.log(`Player ${playerId} got ${newTiles.length} new tiles, total now: ${player.tiles.length}`);
         
         // מעבר לשחקן הבא
         this.nextTurn();
