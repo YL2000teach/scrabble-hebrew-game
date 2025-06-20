@@ -5,10 +5,19 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ 
+    server,
+    perMessageDeflate: false
+});
 
 // הגשת קבצים סטטיים
 app.use(express.static(path.join(__dirname)));
+// Keep connections alive
+app.use((req, res, next) => {
+    res.header('Connection', 'keep-alive');
+    res.header('Access-Control-Allow-Origin', '*');
+    next();
+});
 
 // הגדרות המשחק
 const TILES_PER_PLAYER = 7;
