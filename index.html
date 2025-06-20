@@ -855,6 +855,7 @@
             }
             
             if (gameState.selectedTile === null) {
+                // החזרת אות זמנית לאותיות השחקן
                 const tempIndex = gameState.temporaryTiles.findIndex(t => t.row === row && t.col === col);
                 if (tempIndex !== -1) {
                     const tempTile = gameState.temporaryTiles.splice(tempIndex, 1)[0];
@@ -863,6 +864,7 @@
                     renderPlayerTiles();
                     updateControls();
                     renderTemporaryTiles();
+                    console.log('החזרת אות זמנית, כעת יש לך:', gameState.myTiles.length, 'אותיות');
                 }
                 return;
             }
@@ -878,7 +880,8 @@
                 return;
             }
             
-            const tile = gameState.myTiles[gameState.selectedTile];
+            const tileIndex = gameState.selectedTile;
+            const tile = gameState.myTiles[tileIndex];
             const displayLetter = getTileLetter(tile);
             
             if (isJoker(tile) && !tile.chosenLetter) {
@@ -886,17 +889,25 @@
                 return;
             }
             
+            console.log('לפני הנחת אות:', gameState.myTiles.length, 'אותיות');
+            console.log('מניח אות:', tile, 'באינדקס:', tileIndex);
+            
+            // הוספה לאותיות זמניות
             gameState.temporaryTiles.push({
                 row: row,
                 col: col,
                 letter: displayLetter,
-                points: getTilePoints(tile),  // עכשיו יחשב את הניקוד הנכון לג'וקר
+                points: getTilePoints(tile),
                 isJoker: isJoker(tile),
                 originalTile: tile
             });
             
-            gameState.myTiles.splice(gameState.selectedTile, 1);
+            // הסרה מהאותיות של השחקן - BUG FIX!
+            gameState.myTiles.splice(tileIndex, 1);
             gameState.selectedTile = null;
+            
+            console.log('אחרי הנחת אות:', gameState.myTiles.length, 'אותיות');
+            console.log('אותיות זמניות:', gameState.temporaryTiles.length);
             
             updateBoardDisplay();
             renderPlayerTiles();
@@ -1006,14 +1017,19 @@
             document.getElementById('passBtn').disabled = !isMyTurn || hasTemporaryTiles;
         }
         
-        // אישור מילה - תוקן לחלוטין!
+        // אישור מילה - עם לוגים לבדיקה
         function confirmWord() {
             if (gameState.temporaryTiles.length === 0) {
                 showMessage('לא הונחו אותיות חדשות', 'error');
                 return;
             }
             
+            console.log('=== לפני אישור מילה ===');
+            console.log('אותיות זמניות:', gameState.temporaryTiles.length);
+            console.log('אותיות שחקן:', gameState.myTiles.length);
+            
             const score = calculateWordScore();
+            const tilesUsed = gameState.temporaryTiles.length;
             
             // הוספת האותיות לוח הקבוע
             gameState.temporaryTiles.forEach(tile => {
@@ -1039,16 +1055,22 @@
                 document.getElementById('myScore').textContent = gameState.players[gameState.myId].score;
             }
             
-            // חישוב כמה אותיות צריך להוסיף
-            const tilesUsed = gameState.temporaryTiles.length;
-            
-            // ניקוי אותיות זמניות - BUG FIX: לא להחזיר את האותיות!
+            // ניקוי אותיות זמניות
             gameState.temporaryTiles = [];
             gameState.selectedTile = null;
+            
+            console.log('=== אחרי ניקוי זמניות ===');
+            console.log('אותיות זמניות:', gameState.temporaryTiles.length);
+            console.log('אותיות שחקן:', gameState.myTiles.length);
+            console.log('צריך להוסיף:', tilesUsed, 'אותיות חדשות');
             
             // הוספת אותיות חדשות במקום האותיות שהושמו
             const newTiles = generateRandomTiles(tilesUsed);
             gameState.myTiles.push(...newTiles);
+            
+            console.log('=== אחרי הוספת אותיות חדשות ===');
+            console.log('אותיות חדשות שנוצרו:', newTiles.length);
+            console.log('סך הכל אותיות עכשיו:', gameState.myTiles.length);
             
             // עדכון תצוגה
             updateBoardDisplay();
