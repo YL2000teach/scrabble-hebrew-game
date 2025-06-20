@@ -1013,39 +1013,44 @@
             const score = calculateWordScore();
             
             if (ws && ws.readyState === WebSocket.OPEN) {
+                console.log('שולח מילה לשרת:', gameState.temporaryTiles);
+                
                 ws.send(JSON.stringify({
                     type: 'play_word',
                     tiles: gameState.temporaryTiles,
                     score: score
                 }));
-            }
-            
-            // עדכון מקומי (במצב דמו או לפני קבלת אישור מהשרת)
-            gameState.temporaryTiles.forEach(tile => {
-                gameState.board[tile.row][tile.col] = {
-                    letter: tile.letter,
-                    isJoker: tile.isJoker,
-                    chosenLetter: tile.chosenLetter
-                };
-            });
-            
-            // עדכון ניקוד במצב דמו
-            if (!gameState.isConnected) {
+                
+                // **תיקון**: ננקה את הזמניות רק אחרי שהשרת יאשר
+                // כרגע נשאיר אותן עד שנקבל תשובה
+                showMessage('שולח מילה לשרת...', 'info');
+                
+            } else {
+                // מצב דמו - עדכון מקומי
+                gameState.temporaryTiles.forEach(tile => {
+                    gameState.board[tile.row][tile.col] = {
+                        letter: tile.letter,
+                        isJoker: tile.isJoker,
+                        chosenLetter: tile.chosenLetter
+                    };
+                });
+                
+                // עדכון ניקוד במצב דמו
                 if (gameState.players[gameState.myId]) {
                     gameState.players[gameState.myId].score += score;
                     document.getElementById('myScore').textContent = gameState.players[gameState.myId].score;
                 }
+                
+                gameState.temporaryTiles = [];
+                gameState.selectedTile = null;
+                
+                updateBoardDisplay();
+                renderTemporaryTiles();
+                updateControls();
+                updatePlayersList();
+                
+                showMessage(`נוספו ${score} נקודות!`, 'success');
             }
-            
-            gameState.temporaryTiles = [];
-            gameState.selectedTile = null;
-            
-            updateBoardDisplay();
-            renderTemporaryTiles();
-            updateControls();
-            updatePlayersList();
-            
-            showMessage(`נוספו ${score} נקודות!`, 'success');
         }
         
         function isValidPlacement() {
@@ -1407,12 +1412,26 @@
                     break;
                     
                 case 'word_played':
+                    console.log('word_played message received');
                     gameState.board = data.board;
                     gameState.players = data.players;
+                    
+                    // **תיקון**: אם זה השחקן שלי, נקה את הזמניות
+                    if (data.playerId === gameState.myId) {
+                        console.log('זה המהלך שלי - מנקה אותיות זמניות');
+                        gameState.temporaryTiles = [];
+                        gameState.selectedTile = null;
+                        renderTemporaryTiles();
+                        updateControls();
+                        
+                        document.getElementById('myScore').textContent = gameState.players[gameState.myId]?.score || 0;
+                        console.log('עדכנתי את הניקוד שלי');
+                    }
                     
                     updateBoardDisplay();
                     updatePlayersList();
                     
+                    // עדכון מספר האותיות בשק
                     if (data.tilesLeft !== undefined) {
                         document.getElementById('tilesLeft').textContent = data.tilesLeft;
                     }
@@ -1424,8 +1443,12 @@
                     console.log('קיבלתי אותיות חדשות:', data.myTiles);
                     if (data.myTiles && Array.isArray(data.myTiles)) {
                         gameState.myTiles = data.myTiles;
+                        console.log('עדכנתי gameState.myTiles:', gameState.myTiles);
                         renderPlayerTiles();
+                        console.log('קראתי ל-renderPlayerTiles()');
                         showMessage(`קיבלת ${data.myTiles.length} אותיות חדשות!`, 'success');
+                    } else {
+                        console.error('נתונים לא תקינים ב-new_tiles:', data);
                     }
                     break;
                     
