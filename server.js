@@ -403,7 +403,7 @@ wss.on('connection', (ws, req) => {
                         type: 'room_joined',
                         playerId: playerId,
                         roomId: roomId,
-                        myTiles: player.tiles,
+                        myTiles: player.tiles || [], // **תיקון**: וודא שיש ברירת מחדל
                         ...currentGame.getGameState()
                     }));
                     
@@ -445,7 +445,7 @@ wss.on('connection', (ws, req) => {
                         // **תיקון קריטי**: שליחת אותיות חדשות רק לשחקן שביצע את המהלך
                         currentGame.sendToPlayer(playerId, {
                             type: 'new_tiles',
-                            myTiles: player.tiles
+                            myTiles: player.tiles || [] // **תיקון**: וודא שיש ברירת מחדל
                         });
                         
                         // הודעה על שינוי תור
@@ -472,7 +472,7 @@ wss.on('connection', (ws, req) => {
                         ws.send(JSON.stringify({
                             type: 'tiles_exchanged',
                             playerId: playerId,
-                            newTiles: exchangeResult.newTiles
+                            newTiles: exchangeResult.newTiles || [] // **תיקון**: ברירת מחדל
                         }));
                         
                         // הודעה על שינוי תור
