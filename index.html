@@ -1,62 +1,4 @@
-function placeTile(row, col) {
-            if (gameState.currentPlayer !== gameState.myId) {
-                showMessage('לא התור שלך!', 'error');
-                return;
-            }
-            
-            if (gameState.selectedTile === null) {
-                // החזרת אות זמנית לאותיות השחקן
-                const tempIndex = gameState.temporaryTiles.findIndex(t => t.row === row && t.col === col);
-                if (tempIndex !== -1) {
-                    const tempTile = gameState.temporaryTiles.splice(tempIndex, 1)[0];
-                    gameState.myTiles.push(tempTile.originalTile);
-                    updateBoardDisplay();
-                    renderPlayerTiles();
-                    updateControls();
-                    renderTemporaryTiles();
-                }
-                return;
-            }
-            
-            if (gameState.board[row][col] !== null) {
-                showMessage('המקום תפוס', 'error');
-                return;
-            }
-            
-            const existingTemp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
-            if (existingTemp) {
-                showMessage('יש כבר אות זמנית במקום זה', 'error');
-                return;
-            }
-            
-            const tileIndex = gameState.selectedTile;
-            const tile = gameState.myTiles[tileIndex];
-            const displayLetter = getTileLetter(tile);
-            
-            if (isJoker(tile) && !tile.chosenLetter) {
-                showMessage('תחילה בחר אות לג\'וקר', 'error');
-                return;
-            }
-            
-            // הוספה לאותיות זמניות
-            gameState.temporaryTiles.push({
-                row: row,
-                col: col,
-                letter: displayLetter,
-                points: getTilePoints(tile),
-                isJoker: isJoker(tile),
-                originalTile: tile
-            });
-            
-            // הסרה מהאותיות של השחקן
-            gameState.myTiles.splice(tileIndex, 1);
-            gameState.selectedTile = null;
-            
-            updateBoardDisplay();
-            renderPlayerTiles();
-            updateControls();
-            renderTemporaryTiles();
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -431,7 +373,6 @@ function placeTile(row, col) {
             color: #0c5460;
         }
         
-        /* מודל לבחירת ג'וקר */
         .joker-modal {
             position: fixed;
             top: 0;
@@ -483,7 +424,6 @@ function placeTile(row, col) {
             transform: scale(1.1);
         }
         
-        /* נייד - מסכים קטנים */
         @media (max-width: 768px) {
             body {
                 padding: 5px;
@@ -567,7 +507,6 @@ function placeTile(row, col) {
             }
         }
         
-        /* נייד קטן מאוד */
         @media (max-width: 480px) {
             .board {
                 padding: 3px;
@@ -662,23 +601,20 @@ function placeTile(row, col) {
         </div>
     </div>
 
-    <!-- מודל לבחירת ג'וקר -->
     <div class="joker-modal" id="jokerModal">
         <div class="joker-content">
             <h3>בחר אות לג'וקר</h3>
-            <p>הג'וקר יהפך לאות הנבחרת (0 נקודות)</p>
+            <p>הג'וקר יהפך לאות הנבחרת עם הניקוד המתאים</p>
             <div class="joker-letters" id="jokerLetters"></div>
             <button class="btn btn-secondary" onclick="closeJokerModal()">ביטול</button>
         </div>
     </div>
 
     <script>
-        // הגדרות המשחק
         const BOARD_SIZE = 15;
         const TILES_PER_PLAYER = 7;
         const WS_URL = 'wss://scrabble-hebrew-game.onrender.com';
         
-        // אותיות ונקודות
         const LETTER_DISTRIBUTION = {
             'א': { count: 8, points: 1 },
             'ב': { count: 3, points: 3 },
@@ -705,7 +641,6 @@ function placeTile(row, col) {
             '': { count: 2, points: 0 }
         };
         
-        // מקדמי הלוח
         const SPECIAL_CELLS = {
             'word-triple': [[0,0], [0,7], [0,14], [7,0], [7,14], [14,0], [14,7], [14,14]],
             'word-double': [[1,1], [2,2], [3,3], [4,4], [1,13], [2,12], [3,11], [4,10], [7,7], [10,4], [11,3], [12,2], [13,1], [13,13], [12,12], [11,11], [10,10]],
@@ -713,7 +648,6 @@ function placeTile(row, col) {
             'letter-double': [[0,3], [0,11], [2,6], [2,8], [3,0], [3,7], [3,14], [6,2], [6,6], [6,8], [6,12], [7,3], [7,11], [8,2], [8,6], [8,8], [8,12], [11,0], [11,7], [11,14], [12,6], [12,8], [14,3], [14,11]]
         };
         
-        // משתני המשחק
         let gameState = {
             board: Array(15).fill().map(() => Array(15).fill(null)),
             players: {},
@@ -729,7 +663,6 @@ function placeTile(row, col) {
         
         let ws = null;
         
-        // יצירת הלוח
         function createBoard() {
             const board = document.getElementById('gameBoard');
             board.innerHTML = '';
@@ -777,9 +710,7 @@ function placeTile(row, col) {
             const container = document.getElementById('playerTiles');
             container.innerHTML = '';
             
-            // בדיקה שהאותיות קיימות ובמבנה הנכון
             if (!gameState.myTiles || !Array.isArray(gameState.myTiles)) {
-                console.log('בעיה עם האותיות:', gameState.myTiles);
                 gameState.myTiles = [];
                 return;
             }
@@ -792,7 +723,6 @@ function placeTile(row, col) {
                     tileElement.className += ' selected';
                 }
                 
-                // טיפול בג'וקר
                 if (tile.letter === '' || tile.letter === null || tile === '') {
                     tileElement.className += ' joker';
                     tileElement.textContent = tile.chosenLetter || '?';
@@ -826,11 +756,10 @@ function placeTile(row, col) {
                 return LETTER_DISTRIBUTION[tile]?.points || 0;
             }
             if (tile.letter === '' || tile.letter === null) {
-                // ג'וקר מקבל את הניקוד של האות שנבחרה
                 if (tile.chosenLetter) {
                     return LETTER_DISTRIBUTION[tile.chosenLetter]?.points || 0;
                 }
-                return 0;  // ג'וקר שעוד לא נבחרה לו אות
+                return 0;
             }
             return LETTER_DISTRIBUTION[tile.letter]?.points || 0;
         }
@@ -857,7 +786,6 @@ function placeTile(row, col) {
             
             const tile = gameState.myTiles[index];
             
-            // אם זה ג'וקר ולא נבחרה עדיין אות
             if (isJoker(tile) && !tile.chosenLetter) {
                 openJokerModal(index);
                 return;
@@ -874,9 +802,8 @@ function placeTile(row, col) {
             
             lettersContainer.innerHTML = '';
             
-            // יצירת כפתורים לכל האותיות (ללא ג'וקר)
             Object.keys(LETTER_DISTRIBUTION).forEach(letter => {
-                if (letter !== '') {  // לא כולל ג'וקר
+                if (letter !== '') {
                     const button = document.createElement('button');
                     button.className = 'joker-letter';
                     button.textContent = letter;
@@ -892,7 +819,6 @@ function placeTile(row, col) {
             if (gameState.jokerTileIndex !== null) {
                 const tile = gameState.myTiles[gameState.jokerTileIndex];
                 
-                // עדכון הג'וקר
                 if (typeof tile === 'string') {
                     gameState.myTiles[gameState.jokerTileIndex] = {
                         letter: '',
@@ -920,7 +846,6 @@ function placeTile(row, col) {
             }
             
             if (gameState.selectedTile === null) {
-                // החזרת אות זמנית לאותיות השחקן
                 const tempIndex = gameState.temporaryTiles.findIndex(t => t.row === row && t.col === col);
                 if (tempIndex !== -1) {
                     const tempTile = gameState.temporaryTiles.splice(tempIndex, 1)[0];
@@ -929,7 +854,6 @@ function placeTile(row, col) {
                     renderPlayerTiles();
                     updateControls();
                     renderTemporaryTiles();
-                    console.log('החזרת אות זמנית, כעת יש לך:', gameState.myTiles.length, 'אותיות');
                 }
                 return;
             }
@@ -954,10 +878,6 @@ function placeTile(row, col) {
                 return;
             }
             
-            console.log('לפני הנחת אות:', gameState.myTiles.length, 'אותיות');
-            console.log('מניח אות:', tile, 'באינדקס:', tileIndex);
-            
-            // הוספה לאותיות זמניות
             gameState.temporaryTiles.push({
                 row: row,
                 col: col,
@@ -967,12 +887,8 @@ function placeTile(row, col) {
                 originalTile: tile
             });
             
-            // הסרה מהאותיות של השחקן - BUG FIX!
             gameState.myTiles.splice(tileIndex, 1);
             gameState.selectedTile = null;
-            
-            console.log('אחרי הנחת אות:', gameState.myTiles.length, 'אותיות');
-            console.log('אותיות זמניות:', gameState.temporaryTiles.length);
             
             updateBoardDisplay();
             renderPlayerTiles();
@@ -989,14 +905,12 @@ function placeTile(row, col) {
                 const permanentLetter = gameState.board[row][col];
                 const tempTile = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
                 
-                // נקה תוכן קודם
                 cell.innerHTML = '';
                 
                 if (permanentLetter) {
                     cell.textContent = permanentLetter.letter || permanentLetter;
                     cell.className = cell.className.replace(/\s*(occupied|temporary)/g, '') + ' occupied';
                     
-                    // הוספת סימן ג'וקר אם צריך
                     if (permanentLetter.isJoker) {
                         const jokerIndicator = document.createElement('div');
                         jokerIndicator.className = 'joker-indicator';
@@ -1006,596 +920,3 @@ function placeTile(row, col) {
                 } else if (tempTile) {
                     cell.textContent = tempTile.letter;
                     cell.className = cell.className.replace(/\s*(occupied|temporary)/g, '') + ' temporary';
-                    
-                    // הוספת סימן ג'וקר אם צריך
-                    if (tempTile.isJoker) {
-                        const jokerIndicator = document.createElement('div');
-                        jokerIndicator.className = 'joker-indicator';
-                        jokerIndicator.textContent = '*';
-                        cell.appendChild(jokerIndicator);
-                    }
-                } else {
-                    cell.className = cell.className.replace(/\s*(occupied|temporary)/g, '');
-                    if (row === 7 && col === 7) {
-                        cell.textContent = '★';
-                    } else {
-                        for (const [type, positions] of Object.entries(SPECIAL_CELLS)) {
-                            if (positions.some(([r, c]) => r === row && c === col)) {
-                                switch (type) {
-                                    case 'word-triple':
-                                        cell.textContent = 'מ×3';
-                                        break;
-                                    case 'word-double':
-                                        cell.textContent = 'מ×2';
-                                        break;
-                                    case 'letter-triple':
-                                        cell.textContent = 'א×3';
-                                        break;
-                                    case 'letter-double':
-                                        cell.textContent = 'א×2';
-                                        break;
-                                }
-                                break;
-                            }
-                        }
-                        if (!cell.textContent || (!cell.textContent.includes('×') && cell.textContent !== '★')) {
-                            cell.textContent = '';
-                        }
-                    }
-                }
-            });
-        }
-        
-        function renderTemporaryTiles() {
-            const container = document.getElementById('tempTiles');
-            container.innerHTML = '';
-            
-            gameState.temporaryTiles.forEach(tempTile => {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                tile.textContent = tempTile.letter || '?';
-                
-                if (tempTile.isJoker) {
-                    tile.className += ' joker';
-                    const jokerIndicator = document.createElement('div');
-                    jokerIndicator.className = 'joker-indicator';
-                    jokerIndicator.textContent = '*';
-                    tile.appendChild(jokerIndicator);
-                }
-                
-                const score = document.createElement('div');
-                score.className = 'tile-score';
-                score.textContent = tempTile.points;
-                tile.appendChild(score);
-                
-                container.appendChild(tile);
-            });
-        }
-        
-        function updateControls() {
-            const isMyTurn = gameState.currentPlayer === gameState.myId;
-            const hasTemporaryTiles = gameState.temporaryTiles.length > 0;
-            
-            document.getElementById('confirmBtn').disabled = !isMyTurn || !hasTemporaryTiles;
-            document.getElementById('clearBtn').disabled = !hasTemporaryTiles;
-            document.getElementById('exchangeBtn').disabled = !isMyTurn || hasTemporaryTiles;
-            document.getElementById('passBtn').disabled = !isMyTurn || hasTemporaryTiles;
-        }
-        
-        // אישור מילה - נקי ללא הודעות
-        function confirmWord() {
-            if (gameState.temporaryTiles.length === 0) {
-                showMessage('לא הונחו אותיות חדשות', 'error');
-                return;
-            }
-            
-            const score = calculateWordScore();
-            const tilesUsed = gameState.temporaryTiles.length;
-            
-            // הוספת האותיות לוח הקבוע
-            gameState.temporaryTiles.forEach(tile => {
-                gameState.board[tile.row][tile.col] = {
-                    letter: tile.letter,
-                    isJoker: tile.isJoker,
-                    chosenLetter: tile.isJoker ? tile.originalTile.chosenLetter : null
-                };
-            });
-            
-            // שליחה לשרת (אם מחובר)
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                    type: 'play_word',
-                    tiles: gameState.temporaryTiles,
-                    score: score
-                }));
-            }
-            
-            // עדכון ניקוד מקומי
-            if (gameState.players[gameState.myId]) {
-                gameState.players[gameState.myId].score += score;
-                document.getElementById('myScore').textContent = gameState.players[gameState.myId].score;
-            }
-            
-            // ניקוי אותיות זמניות
-            gameState.temporaryTiles = [];
-            gameState.selectedTile = null;
-            
-            // הוספת אותיות חדשות במקום האותיות שהושמו
-            const newTiles = generateRandomTiles(tilesUsed);
-            gameState.myTiles.push(...newTiles);
-            
-            // עדכון תצוגה
-            updateBoardDisplay();
-            renderTemporaryTiles();
-            renderPlayerTiles();
-            updateControls();
-            
-            showMessage(`נוספו ${score} נקודות!`, 'success');
-        }
-        
-        function addNewTilesToPlayer() {
-            // מחושב בפונקציה confirmWord() כעת
-            // פונקציה זו לא בשימוש יותר
-        }
-        
-        function generateRandomTiles(count) {
-            const tiles = [];
-            const availableLetters = [];
-            
-            // יצירת רשימת אותיות זמינות
-            for (const [letter, data] of Object.entries(LETTER_DISTRIBUTION)) {
-                for (let i = 0; i < data.count; i++) {
-                    availableLetters.push(letter);
-                }
-            }
-            
-            for (let i = 0; i < count && availableLetters.length > 0; i++) {
-                const randomIndex = Math.floor(Math.random() * availableLetters.length);
-                const letter = availableLetters.splice(randomIndex, 1)[0];
-                
-                if (letter === '') {
-                    // יצירת ג'וקר
-                    tiles.push({
-                        letter: '',
-                        chosenLetter: null
-                    });
-                } else {
-                    tiles.push(letter);
-                }
-            }
-            
-            return tiles;
-        }
-        
-        // חישוב ניקוד מילה
-        function calculateWordScore() {
-            const board = gameState.board;
-            const newTiles = gameState.temporaryTiles;
-            const allWords = findAllWordsFormed(board, newTiles);
-            let totalScore = 0;
-
-            for (const word of allWords) {
-                let wordScore = 0;
-                let wordMultiplier = 1;
-
-                for (const tile of word.tiles) {
-                    const isNew = newTiles.some(t => t.row === tile.row && t.col === tile.col);
-                    let letterScore = 0;
-                    
-                    // חישוב ניקוד האות (כולל ג'וקרים)
-                    const tempTile = newTiles.find(t => t.row === tile.row && t.col === tile.col);
-                    if (tempTile) {
-                        letterScore = tempTile.points;  // משתמש בניקוד שכבר חושב
-                    } else {
-                        const boardTile = gameState.board[tile.row][tile.col];
-                        if (boardTile && boardTile.isJoker && boardTile.chosenLetter) {
-                            letterScore = LETTER_DISTRIBUTION[boardTile.chosenLetter]?.points || 0;
-                        } else {
-                            letterScore = LETTER_DISTRIBUTION[tile.letter]?.points || 0;
-                        }
-                    }
-
-                    if (isNew) {
-                        const bonusType = getCellBonus(tile.row, tile.col);
-                        if (bonusType === 'letter-double') letterScore *= 2;
-                        if (bonusType === 'letter-triple') letterScore *= 3;
-                        if (bonusType === 'word-double') wordMultiplier *= 2;
-                        if (bonusType === 'word-triple') wordMultiplier *= 3;
-                    }
-
-                    wordScore += letterScore;
-                }
-
-                totalScore += wordScore * wordMultiplier;
-            }
-
-            if (newTiles.length === 7) {
-                totalScore += 50;  // בונוס לשימוש בכל האותיות
-            }
-
-            return totalScore;
-        }
-
-        function findAllWordsFormed(board, newTiles) {
-            const words = [];
-            const directions = [
-                { dr: 0, dc: 1 },  // אופקי
-                { dr: 1, dc: 0 }   // אנכי
-            ];
-
-            for (const { dr, dc } of directions) {
-                const visited = new Set();
-
-                for (const tile of newTiles) {
-                    const key = `${tile.row},${tile.col},${dr},${dc}`;
-                    if (visited.has(key)) continue;
-
-                    const wordTiles = collectWord(board, tile.row, tile.col, dr, dc);
-                    if (wordTiles.length > 1) {
-                        words.push({ tiles: wordTiles });
-                        wordTiles.forEach(t => visited.add(`${t.row},${t.col},${dr},${dc}`));
-                    }
-                }
-            }
-
-            return words;
-        }
-
-        function collectWord(board, row, col, dr, dc) {
-            let startRow = row;
-            let startCol = col;
-            while (inBounds(startRow - dr, startCol - dc) && (board[startRow - dr][startCol - dc] || hasTempTile(startRow - dr, startCol - dc))) {
-                startRow -= dr;
-                startCol -= dc;
-            }
-
-            const tiles = [];
-            let r = startRow;
-            let c = startCol;
-            while (inBounds(r, c) && (board[r][c] || hasTempTile(r, c))) {
-                tiles.push({
-                    row: r,
-                    col: c,
-                    letter: getLetterAt(r, c)
-                });
-                r += dr;
-                c += dc;
-            }
-
-            return tiles;
-        }
-
-        function getLetterAt(row, col) {
-            const temp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
-            if (temp) return temp.letter;
-            
-            const permanent = gameState.board[row][col];
-            if (permanent) return permanent.letter || permanent;
-            
-            return null;
-        }
-
-        function hasTempTile(row, col) {
-            return gameState.temporaryTiles.some(t => t.row === row && t.col === col);
-        }
-
-        function inBounds(row, col) {
-            return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
-        }
-
-        function getCellBonus(row, col) {
-            for (const [type, positions] of Object.entries(SPECIAL_CELLS)) {
-                if (positions.some(([r, c]) => r === row && c === col)) {
-                    return type;
-                }
-            }
-            return null;
-        }
-
-        function clearTemporary() {
-            gameState.temporaryTiles.forEach(tile => {
-                gameState.myTiles.push(tile.originalTile);
-            });
-            
-            gameState.temporaryTiles = [];
-            gameState.selectedTile = null;
-            
-            updateBoardDisplay();
-            renderPlayerTiles();
-            renderTemporaryTiles();
-            updateControls();
-        }
-        
-        function exchangeTiles() {
-            if (gameState.selectedTile === null) {
-                showMessage('בחר אותיות להחלפה', 'error');
-                return;
-            }
-            
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                    type: 'exchange_tiles',
-                    tileIndexes: [gameState.selectedTile]
-                }));
-            }
-            
-            // החלפה מקומית (סימולציה)
-            const newTile = generateRandomTiles(1)[0];
-            gameState.myTiles[gameState.selectedTile] = newTile;
-            
-            gameState.selectedTile = null;
-            renderPlayerTiles();
-            showMessage('אותיות הוחלפו', 'info');
-        }
-        
-        function passTurn() {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                    type: 'pass_turn'
-                }));
-            }
-            
-            showMessage('התור הועבר', 'info');
-        }
-        
-        function showMessage(text, type = 'info') {
-            const existingMessage = document.querySelector('.message');
-            if (existingMessage) {
-                existingMessage.remove();
-            }
-            
-            const message = document.createElement('div');
-            message.className = `message ${type}`;
-            message.textContent = text;
-            
-            const container = document.querySelector('.board-container');
-            container.insertBefore(message, container.firstChild);
-            
-            setTimeout(() => {
-                if (message.parentNode) {
-                    message.remove();
-                }
-            }, 3000);
-        }
-        
-        function updatePlayersList() {
-            const container = document.getElementById('playersList');
-            container.innerHTML = '';
-            
-            Object.values(gameState.players).forEach(player => {
-                const item = document.createElement('div');
-                item.className = 'player-item';
-                if (player.id === gameState.currentPlayer) {
-                    item.className += ' current-turn';
-                }
-                
-                item.innerHTML = `
-                    <span>${player.name}</span>
-                    <span>${player.score} נק'</span>
-                `;
-                
-                container.appendChild(item);
-            });
-        }
-        
-        function joinRoom() {
-            const roomId = document.getElementById('roomInput').value.trim() || generateRoomId();
-            const playerName = document.getElementById('nameInput').value.trim() || 'שחקן אנונימי';
-            
-            connectToRoom(roomId, playerName);
-        }
-        
-        function generateRoomId() {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
-        }
-        
-        function connectToRoom(roomId, playerName) {
-            try {
-                ws = new WebSocket(WS_URL);
-                
-                ws.onopen = function() {
-                    gameState.roomId = roomId;
-                    gameState.isConnected = true;
-                    
-                    ws.send(JSON.stringify({
-                        type: 'join_room',
-                        roomId: roomId,
-                        playerName: playerName
-                    }));
-                    
-                    updateConnectionStatus('מתחבר...', 'connected');
-                };
-                
-                ws.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    handleServerMessage(data);
-                };
-                
-                ws.onclose = function() {
-                    gameState.isConnected = false;
-                    updateConnectionStatus('נותק', 'disconnected');
-                    showMessage('החיבור נותק', 'error');
-                };
-                
-                ws.onerror = function(error) {
-                    console.error('WebSocket error:', error);
-                    showMessage('שגיאת חיבור', 'error');
-                };
-                
-            } catch (error) {
-                console.error('Connection error:', error);
-                startDemoMode(roomId, playerName);
-            }
-        }
-        
-        function handleServerMessage(data) {
-            switch (data.type) {
-                case 'room_joined':
-                    gameState.myId = data.playerId;
-                    gameState.roomId = data.roomId;
-                    gameState.players = data.players;
-                    gameState.currentPlayer = data.currentPlayer;
-                    
-                    // רק אם אין אותיות או אם השרת מספק אותיות
-                    if (!gameState.myTiles || gameState.myTiles.length === 0) {
-                        gameState.myTiles = data.myTiles || generateInitialTiles();
-                    }
-                    
-                    updateConnectionStatus(`מחובר לחדר: ${data.roomId}`, 'connected');
-                    document.getElementById('roomCode').textContent = data.roomId;
-                    
-                    renderPlayerTiles();
-                    updatePlayersList();
-                    updateControls();
-                    break;
-                    
-                case 'player_joined':
-                    gameState.players[data.player.id] = data.player;
-                    updatePlayersList();
-                    showMessage(`${data.player.name} הצטרף למשחק`, 'info');
-                    break;
-                    
-                case 'player_left':
-                    delete gameState.players[data.playerId];
-                    updatePlayersList();
-                    showMessage(`שחקן עזב את המשחק`, 'info');
-                    break;
-                    
-                case 'game_state':
-                    gameState.board = data.board;
-                    gameState.players = data.players;
-                    gameState.currentPlayer = data.currentPlayer;
-                    
-                    updateBoardDisplay();
-                    updatePlayersList();
-                    updateControls();
-                    
-                    // לא לעדכן אותיות אם יש אותיות זמניות
-                    if (data.myTiles && gameState.temporaryTiles.length === 0) {
-                        gameState.myTiles = data.myTiles;
-                        renderPlayerTiles();
-                    }
-                    break;
-                    
-                case 'turn_changed':
-                    gameState.currentPlayer = data.currentPlayer;
-                    updatePlayersList();
-                    updateControls();
-                    
-                    if (data.currentPlayer === gameState.myId) {
-                        showMessage('התור שלך!', 'success');
-                    }
-                    break;
-                    
-                case 'word_played':
-                    gameState.board = data.board;
-                    gameState.players = data.players;
-                    
-                    updateBoardDisplay();
-                    updatePlayersList();
-                    
-                    // רק אם זה השחקן הנוכחי ויש אותיות חדשות מהשרת
-                    if (data.playerId === gameState.myId && data.newTiles) {
-                        gameState.myTiles = data.newTiles;
-                        renderPlayerTiles();
-                        document.getElementById('myScore').textContent = gameState.players[gameState.myId]?.score || 0;
-                    }
-                    
-                    showMessage(`${data.playerName} שיחק מילה וקיבל ${data.score} נקודות`, 'success');
-                    break;
-                    
-                case 'tiles_exchanged':
-                    if (data.playerId === gameState.myId) {
-                        gameState.myTiles = data.newTiles;
-                        renderPlayerTiles();
-                    }
-                    break;
-                    
-                case 'game_ended':
-                    showMessage(`המשחק הסתיים! המנצח: ${data.winner}`, 'success');
-                    break;
-                    
-                case 'error':
-                    showMessage(data.message, 'error');
-                    break;
-            }
-            
-            if (data.tilesLeft !== undefined) {
-                document.getElementById('tilesLeft').textContent = data.tilesLeft;
-            }
-        }
-        
-        function updateConnectionStatus(text, status) {
-            const statusElement = document.getElementById('connectionStatus');
-            statusElement.textContent = text;
-            statusElement.className = `connection-status ${status}`;
-        }
-        
-        function startDemoMode(roomId, playerName) {
-            gameState.myId = 'demo_player';
-            gameState.roomId = roomId;
-            gameState.currentPlayer = gameState.myId;
-            gameState.players = {
-                [gameState.myId]: {
-                    id: gameState.myId,
-                    name: playerName,
-                    score: 0
-                }
-            };
-            gameState.myTiles = generateInitialTiles();
-            
-            updateConnectionStatus(`מצב דמו - חדר: ${roomId}`, 'connected');
-            document.getElementById('roomCode').textContent = roomId;
-            document.getElementById('myScore').textContent = '0';
-            
-            renderPlayerTiles();
-            updatePlayersList();
-            updateControls();
-            
-            showMessage('פועל במצב דמו (ללא שרת)', 'info');
-        }
-        
-        function generateInitialTiles() {
-            const tiles = [];
-            const availableLetters = [];
-            
-            for (const [letter, data] of Object.entries(LETTER_DISTRIBUTION)) {
-                for (let i = 0; i < data.count; i++) {
-                    availableLetters.push(letter);
-                }
-            }
-            
-            for (let i = 0; i < TILES_PER_PLAYER; i++) {
-                if (availableLetters.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * availableLetters.length);
-                    const letter = availableLetters.splice(randomIndex, 1)[0];
-                    
-                    if (letter === '') {
-                        // יצירת ג'וקר
-                        tiles.push({
-                            letter: '',
-                            chosenLetter: null
-                        });
-                    } else {
-                        tiles.push(letter);
-                    }
-                }
-            }
-            
-            return tiles;
-        }
-        
-        // סגירת מודל הג'וקר בלחיצה על הרקע
-        document.getElementById('jokerModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeJokerModal();
-            }
-        });
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            createBoard();
-            updateControls();
-        });
-    </script>
-</body>
-</html>
