@@ -191,30 +191,58 @@ class ScrabbleGame {
             return { success: false, error: 'לא הוגדרו אותיות' };
         }
         
-        // **תיקון קריטי**: הסרת האותיות שהשתמשו בהן מהשחקן
+        // **תיקון קריטי לג'וקרים**: הסרת האותיות שהשתמשו בהן מהשחקן
         console.log(`Player ${playerId} tiles before: ${player.tiles.length}`);
+        console.log(`Removing ${tiles.length} tiles`);
+        
+        // ספירת כמה אותיות להסיר (כולל ג'וקרים)
+        let tilesToRemove = tiles.length;
+        let removed = 0;
         
         // הסרת האותיות על בסיס המיקום והתוכן
         tiles.forEach(playedTile => {
-            // מצא אות דומה במגש השחקן
-            const tileIndex = player.tiles.findIndex(tile => {
-                if (typeof tile === 'string' && typeof playedTile.originalTile === 'string') {
-                    return tile === playedTile.originalTile;
-                }
-                if (typeof tile === 'object' && typeof playedTile.originalTile === 'object') {
-                    return tile.letter === playedTile.originalTile.letter && 
-                           tile.chosenLetter === playedTile.originalTile.chosenLetter;
-                }
-                return false;
-            });
+            if (removed >= tilesToRemove) return;
+            
+            let tileIndex = -1;
+            
+            // **תיקון מיוחד לג'וקרים**
+            if (playedTile.isJoker) {
+                // מצא ג'וקר במגש (אות ריקה או אובייקט עם letter: "")
+                tileIndex = player.tiles.findIndex(tile => {
+                    if (typeof tile === 'string') {
+                        return tile === '';
+                    }
+                    if (typeof tile === 'object') {
+                        return tile.letter === '' || tile.letter === null;
+                    }
+                    return false;
+                });
+                console.log(`Looking for joker, found at index: ${tileIndex}`);
+            } else {
+                // אות רגילה
+                const targetLetter = playedTile.letter;
+                tileIndex = player.tiles.findIndex(tile => {
+                    if (typeof tile === 'string') {
+                        return tile === targetLetter;
+                    }
+                    if (typeof tile === 'object') {
+                        return tile.letter === targetLetter;
+                    }
+                    return false;
+                });
+                console.log(`Looking for letter '${targetLetter}', found at index: ${tileIndex}`);
+            }
             
             if (tileIndex !== -1) {
-                player.tiles.splice(tileIndex, 1);
-                console.log(`Removed tile at index ${tileIndex}`);
+                const removedTile = player.tiles.splice(tileIndex, 1)[0];
+                removed++;
+                console.log(`Removed tile at index ${tileIndex}:`, removedTile);
+            } else {
+                console.warn(`Could not find tile to remove:`, playedTile);
             }
         });
         
-        console.log(`Player ${playerId} tiles after removal: ${player.tiles.length}`);
+        console.log(`Player ${playerId} tiles after removal: ${player.tiles.length} (removed ${removed})`);
         
         // הצבת האותיות על הלוח
         tiles.forEach(tile => {
@@ -230,9 +258,14 @@ class ScrabbleGame {
         // עדכון ניקוד
         player.score += score;
         
-        // חלוקת אותיות חדשות (רק כמה שהסירו)
-        const newTiles = this.dealTiles(playerId, tiles.length);
+        // חלוקת אותיות חדשות (רק כמה שהסירו בפועל)
+        const newTiles = this.dealTiles(playerId, removed);
         console.log(`Player ${playerId} got ${newTiles.length} new tiles, total now: ${player.tiles.length}`);
+        
+        // בדיקה שהמספר תקין
+        if (player.tiles.length > 7) {
+            console.error(`ERROR: Player has ${player.tiles.length} tiles, should be 7 or less!`);
+        }
         
         // מעבר לשחקן הבא
         this.nextTurn();
