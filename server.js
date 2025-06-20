@@ -442,10 +442,10 @@ wss.on('connection', (ws, req) => {
                             tilesLeft: currentGame.tileBag.length
                         });
                         
-                        // שליחת אותיות חדשות רק לשחקן שביצע את המהלך
+                        // **תיקון קריטי**: שליחת אותיות חדשות רק לשחקן שביצע את המהלך
                         currentGame.sendToPlayer(playerId, {
                             type: 'new_tiles',
-                            myTiles: wordResult.newTiles
+                            myTiles: player.tiles
                         });
                         
                         // הודעה על שינוי תור
