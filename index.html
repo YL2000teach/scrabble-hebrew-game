@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -127,14 +127,6 @@
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
-        }
-        
-        .letter-score {
-            position: absolute;
-            bottom: 1px;
-            left: 1px;
-            font-size: 6px;
-            opacity: 0.8;
         }
         
         .joker-indicator {
@@ -462,10 +454,6 @@
             .cell.occupied,
             .cell.temporary {
                 font-size: 12px;
-            }
-            
-            .letter-score {
-                font-size: 5px;
             }
             
             .tile {
@@ -916,7 +904,908 @@
                         jokerIndicator.className = 'joker-indicator';
                         jokerIndicator.textContent = '*';
                         cell.appendChild(jokerIndicator);
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבץ נא</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 0.9rem;
+        }
+        
+        .game-area {
+            display: flex;
+            gap: 20px;
+            padding: 15px;
+        }
+        
+        .board-container {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 1px;
+            background: #333;
+            padding: 8px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+            aspect-ratio: 1;
+        }
+        
+        .cell {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            border-radius: 2px;
+            transition: all 0.2s;
+            min-height: 0;
+            aspect-ratio: 1;
+        }
+        
+        .cell:hover {
+            background: #e0e0e0;
+        }
+        
+        .cell.center {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+        
+        .cell.word-double {
+            background: linear-gradient(45deg, #ffd93d, #f9ca24);
+            color: #333;
+        }
+        
+        .cell.word-triple {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+        
+        .cell.letter-double {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+        }
+        
+        .cell.letter-triple {
+            background: linear-gradient(45deg, #a29bfe, #6c5ce7);
+            color: white;
+        }
+        
+        .cell.occupied {
+            background: #2d3436;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .cell.temporary {
+            background: #00b894;
+            color: white;
+            font-size: 14px;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .joker-indicator {
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            font-size: 6px;
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .sidebar {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .player-info {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .players-list {
+            background: #e9ecef;
+            padding: 12px;
+            border-radius: 10px;
+        }
+        
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #6c757d;
+        }
+        
+        .player-item.current-turn {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .player-tiles {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 10px;
+        }
+        
+        .tiles-container {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .tile {
+            width: 35px;
+            height: 35px;
+            background: #2d3436;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        
+        .tile:hover {
+            transform: scale(1.1);
+        }
+        
+        .tile.selected {
+            border: 3px solid #4CAF50;
+            transform: scale(1.1);
+        }
+        
+        .tile.joker {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .tile-score {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            font-size: 8px;
+            opacity: 0.8;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 70px;
+            font-size: 14px;
+            touch-action: manipulation;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #45a049;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #5a6268;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-warning:hover:not(:disabled) {
+            background: #e0a800;
+        }
+        
+        .connection-status {
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .game-info {
+            background: #e9ecef;
+            padding: 12px;
+            border-radius: 10px;
+        }
+        
+        .room-section {
+            background: #fff3cd;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-width: 120px;
+        }
+        
+        .temp-tiles {
+            display: flex;
+            gap: 4px;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 184, 148, 0.1);
+            border-radius: 5px;
+            min-height: 45px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .temp-tiles:empty::before {
+            content: "אותיות זמניות יופיעו כאן";
+            color: #6c757d;
+            font-style: italic;
+            font-size: 14px;
+        }
+        
+        .message {
+            padding: 8px;
+            margin: 8px 0;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .joker-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .joker-modal.show {
+            display: flex;
+        }
+        
+        .joker-content {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .joker-letters {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+        
+        .joker-letter {
+            width: 40px;
+            height: 40px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .joker-letter:hover {
+            background: #45a049;
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header p {
+                font-size: 0.8rem;
+            }
+            
+            .game-area {
+                flex-direction: column;
+                gap: 15px;
+                padding: 10px;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: -1;
+            }
+            
+            .board {
+                max-width: 100%;
+                padding: 5px;
+                gap: 0.5px;
+            }
+            
+            .cell {
+                font-size: 8px;
+                min-height: 20px;
+            }
+            
+            .cell.occupied,
+            .cell.temporary {
+                font-size: 12px;
+            }
+            
+            .tile {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .controls {
+                gap: 5px;
+            }
+            
+            .btn {
+                padding: 12px 8px;
+                font-size: 13px;
+                min-width: 60px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .input-group input {
+                min-width: auto;
+            }
+            
+            .players-list,
+            .player-info,
+            .player-tiles,
+            .game-info {
+                padding: 10px;
+            }
+            
+            .temp-tiles {
+                min-height: 50px;
+            }
+            
+            .joker-letters {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .board {
+                padding: 3px;
+            }
+            
+            .cell {
+                font-size: 7px;
+                min-height: 18px;
+            }
+            
+            .cell.occupied,
+            .cell.temporary {
+                font-size: 10px;
+            }
+            
+            .tile {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .btn {
+                padding: 10px 6px;
+                font-size: 12px;
+            }
+            
+            .header {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 שבץ נא אונליין</h1>
+            <p>משחק מילים עברי מקוון</p>
+        </div>
+        
+        <div class="room-section">
+            <h3>חיבור למשחק</h3>
+            <div class="input-group">
+                <input type="text" id="roomInput" placeholder="הכנס קוד חדר (או השאר ריק ליצירת חדר חדש)">
+                <input type="text" id="nameInput" placeholder="השם שלך" maxlength="20">
+                <button class="btn btn-primary" onclick="joinRoom()">הצטרף למשחק</button>
+            </div>
+            <div class="connection-status disconnected" id="connectionStatus">
+                לא מחובר
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="board-container">
+                <div class="board" id="gameBoard"></div>
+                
+                <div class="temp-tiles" id="tempTiles"></div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" id="confirmBtn" onclick="confirmWord()" disabled>אשר מילה</button>
+                    <button class="btn btn-warning" id="clearBtn" onclick="clearTemporary()" disabled>נקה</button>
+                    <button class="btn btn-secondary" id="exchangeBtn" onclick="exchangeTiles()" disabled>החלף אותיות</button>
+                    <button class="btn btn-secondary" id="passBtn" onclick="passTurn()" disabled>דלג תור</button>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="players-list">
+                    <h3>שחקנים</h3>
+                    <div id="playersList"></div>
+                </div>
+                
+                <div class="player-info">
+                    <h3>המידע שלי</h3>
+                    <div>ניקוד: <span id="myScore">0</span></div>
+                    <div>אותיות נותרות: <span id="myTilesCount">7</span></div>
+                </div>
+                
+                <div class="player-tiles">
+                    <h3>האותיות שלי</h3>
+                    <div class="tiles-container" id="playerTiles"></div>
+                </div>
+                
+                <div class="game-info">
+                    <h3>מידע משחק</h3>
+                    <div>אותיות בשק: <span id="tilesLeft">100</span></div>
+                    <div>קוד חדר: <span id="roomCode">-</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="joker-modal" id="jokerModal">
+        <div class="joker-content">
+            <h3>בחר אות לג'וקר</h3>
+            <p>הג'וקר יהפך לאות הנבחרת עם הניקוד המתאים</p>
+            <div class="joker-letters" id="jokerLetters"></div>
+            <button class="btn btn-secondary" onclick="closeJokerModal()">ביטול</button>
+        </div>
+    </div>
+
+    <script>
+        const BOARD_SIZE = 15;
+        const TILES_PER_PLAYER = 7;
+        const WS_URL = 'wss://scrabble-hebrew-game.onrender.com';
+        
+        const LETTER_DISTRIBUTION = {
+            'א': { count: 8, points: 1 },
+            'ב': { count: 3, points: 3 },
+            'ג': { count: 2, points: 4 },
+            'ד': { count: 3, points: 3 },
+            'ה': { count: 8, points: 1 },
+            'ו': { count: 6, points: 2 },
+            'ז': { count: 1, points: 8 },
+            'ח': { count: 2, points: 4 },
+            'ט': { count: 2, points: 4 },
+            'י': { count: 8, points: 1 },
+            'כ': { count: 4, points: 2 },
+            'ל': { count: 6, points: 2 },
+            'מ': { count: 6, points: 2 },
+            'נ': { count: 6, points: 2 },
+            'ס': { count: 2, points: 4 },
+            'ע': { count: 2, points: 4 },
+            'פ': { count: 2, points: 4 },
+            'צ': { count: 1, points: 8 },
+            'ק': { count: 1, points: 8 },
+            'ר': { count: 6, points: 2 },
+            'ש': { count: 3, points: 3 },
+            'ת': { count: 6, points: 2 },
+            '': { count: 2, points: 0 }
+        };
+        
+        const SPECIAL_CELLS = {
+            'word-triple': [[0,0], [0,7], [0,14], [7,0], [7,14], [14,0], [14,7], [14,14]],
+            'word-double': [[1,1], [2,2], [3,3], [4,4], [1,13], [2,12], [3,11], [4,10], [7,7], [10,4], [11,3], [12,2], [13,1], [13,13], [12,12], [11,11], [10,10]],
+            'letter-triple': [[1,5], [1,9], [5,1], [5,5], [5,9], [5,13], [9,1], [9,5], [9,9], [9,13], [13,5], [13,9]],
+            'letter-double': [[0,3], [0,11], [2,6], [2,8], [3,0], [3,7], [3,14], [6,2], [6,6], [6,8], [6,12], [7,3], [7,11], [8,2], [8,6], [8,8], [8,12], [11,0], [11,7], [11,14], [12,6], [12,8], [14,3], [14,11]]
+        };
+        
+        let gameState = {
+            board: Array(15).fill().map(() => Array(15).fill(null)),
+            players: {},
+            currentPlayer: null,
+            myTiles: [],
+            myId: null,
+            roomId: null,
+            isConnected: false,
+            temporaryTiles: [],
+            selectedTile: null,
+            jokerTileIndex: null
+        };
+        
+        let ws = null;
+        
+        function createBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+            
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    if (row === 7 && col === 7) {
+                        cell.className += ' center';
+                        cell.textContent = '★';
+                    } else {
+                        for (const [type, positions] of Object.entries(SPECIAL_CELLS)) {
+                            if (positions.some(([r, c]) => r === row && c === col)) {
+                                cell.className += ` ${type}`;
+                                switch (type) {
+                                    case 'word-triple':
+                                        cell.textContent = 'מ×3';
+                                        break;
+                                    case 'word-double':
+                                        cell.textContent = 'מ×2';
+                                        break;
+                                    case 'letter-triple':
+                                        cell.textContent = 'א×3';
+                                        break;
+                                    case 'letter-double':
+                                        cell.textContent = 'א×2';
+                                        break;
+                                }
+                                break;
+                            }
+                        }
                     }
-                } else if (tempTile) {
-                    cell.textContent = tempTile.letter;
-                    cell.className = cell.className.replace(/\s*(occupied|temporary)/g, '') + ' temporary';
+                    
+                    cell.addEventListener('click', () => placeTile(row, col));
+                    board.appendChild(cell);
+                }
+            }
+        }
+        
+        function renderPlayerTiles() {
+            const container = document.getElementById('playerTiles');
+            container.innerHTML = '';
+            
+            if (!gameState.myTiles || !Array.isArray(gameState.myTiles)) {
+                gameState.myTiles = [];
+                return;
+            }
+            
+            gameState.myTiles.forEach((tile, index) => {
+                const tileElement = document.createElement('div');
+                tileElement.className = 'tile';
+                
+                if (gameState.selectedTile === index) {
+                    tileElement.className += ' selected';
+                }
+                
+                if (tile.letter === '' || tile.letter === null || tile === '') {
+                    tileElement.className += ' joker';
+                    tileElement.textContent = tile.chosenLetter || '?';
+                    
+                    if (tile.chosenLetter) {
+                        const jokerIndicator = document.createElement('div');
+                        jokerIndicator.className = 'joker-indicator';
+                        jokerIndicator.textContent = '*';
+                        tileElement.appendChild(jokerIndicator);
+                    }
+                } else {
+                    tileElement.textContent = tile.letter || tile;
+                }
+                
+                tileElement.dataset.index = index;
+                
+                const score = document.createElement('div');
+                score.className = 'tile-score';
+                score.textContent = getTilePoints(tile);
+                tileElement.appendChild(score);
+                
+                tileElement.addEventListener('click', () => selectTile(index));
+                container.appendChild(tileElement);
+            });
+            
+            document.getElementById('myTilesCount').textContent = gameState.myTiles.length;
+        }
+        
+        function getTilePoints(tile) {
+            if (typeof tile === 'string') {
+                return LETTER_DISTRIBUTION[tile]?.points || 0;
+            }
+            if (tile.letter === '' || tile.letter === null) {
+                if (tile.chosenLetter) {
+                    return LETTER_DISTRIBUTION[tile.chosenLetter]?.points || 0;
+                }
+                return 0;
+            }
+            return LETTER_DISTRIBUTION[tile.letter]?.points || 0;
+        }
+        
+        function getTileLetter(tile) {
+            if (typeof tile === 'string') {
+                return tile;
+            }
+            return tile.chosenLetter || tile.letter || '';
+        }
+        
+        function isJoker(tile) {
+            if (typeof tile === 'string') {
+                return tile === '';
+            }
+            return tile.letter === '' || tile.letter === null;
+        }
+        
+        function selectTile(index) {
+            if (gameState.currentPlayer !== gameState.myId) {
+                showMessage('לא התור שלך!', 'error');
+                return;
+            }
+            
+            const tile = gameState.myTiles[index];
+            
+            if (isJoker(tile) && !tile.chosenLetter) {
+                openJokerModal(index);
+                return;
+            }
+            
+            gameState.selectedTile = gameState.selectedTile === index ? null : index;
+            renderPlayerTiles();
+        }
+        
+        function openJokerModal(tileIndex) {
+            gameState.jokerTileIndex = tileIndex;
+            const modal = document.getElementById('jokerModal');
+            const lettersContainer = document.getElementById('jokerLetters');
+            
+            lettersContainer.innerHTML = '';
+            
+            Object.keys(LETTER_DISTRIBUTION).forEach(letter => {
+                if (letter !== '') {
+                    const button = document.createElement('button');
+                    button.className = 'joker-letter';
+                    button.textContent = letter;
+                    button.onclick = () => chooseJokerLetter(letter);
+                    lettersContainer.appendChild(button);
+                }
+            });
+            
+            modal.classList.add('show');
+        }
+        
+        function chooseJokerLetter(letter) {
+            if (gameState.jokerTileIndex !== null) {
+                const tile = gameState.myTiles[gameState.jokerTileIndex];
+                
+                if (typeof tile === 'string') {
+                    gameState.myTiles[gameState.jokerTileIndex] = {
+                        letter: '',
+                        chosenLetter: letter
+                    };
+                } else {
+                    tile.chosenLetter = letter;
+                }
+                
+                renderPlayerTiles();
+            }
+            
+            closeJokerModal();
+        }
+        
+        function closeJokerModal() {
+            document.getElementById('jokerModal').classList.remove('show');
+            gameState.jokerTileIndex = null;
+        }
+        
+        function placeTile(row, col) {
+            if (gameState.currentPlayer !== gameState.myId) {
+                showMessage('לא התור שלך!', 'error');
+                return;
+            }
+            
+            if (gameState.selectedTile === null) {
+                const tempIndex = gameState.temporaryTiles.findIndex(t => t.row === row && t.col === col);
+                if (tempIndex !== -1) {
+                    const tempTile = gameState.temporaryTiles.splice(tempIndex, 1)[0];
+                    gameState.myTiles.push(tempTile.originalTile);
+                    updateBoardDisplay();
+                    renderPlayerTiles();
+                    updateControls();
+                    renderTemporaryTiles();
+                }
+                return;
+            }
+            
+            if (gameState.board[row][col] !== null) {
+                showMessage('המקום תפוס', 'error');
+                return;
+            }
+            
+            const existingTemp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
+            if (existingTemp) {
+                showMessage('יש כבר אות זמנית במקום זה', 'error');
+                return;
+            }
+            
+            const tileIndex = gameState.selectedTile;
+            const tile = gameState.myTiles[tileIndex];
+            const displayLetter = getTileLetter(tile);
+            
+            if (isJoker(tile) && !tile.chosenLetter) {
+                showMessage('תחילה בחר אות לג\'וקר', 'error');
+                return;
+            }
+            
+            gameState.temporaryTiles.push({
+                row: row,
+                col: col,
+                letter: displayLetter,
+                points: getTilePoints(tile),
+                isJoker: isJoker(tile),
+                originalTile: tile
+            });
+            
+            gameState.myTiles.splice(tileIndex, 1);
+            gameState.selectedTile = null;
+            
+            updateBoardDisplay();
+            renderPlayerTiles();
+            updateControls();
+            renderTemporaryTiles();
+        }
+        
+        function updateBoardDisplay() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                const row = Math.floor(index / BOARD_SIZE);
+                const col = index % BOARD_SIZE;
+                
+                const permanentLetter = gameState.board[row][col];
+                const tempTile = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
+                
+                cell.innerHTML = '';
+                
+                if (permanentLetter) {
+                    cell.textContent = permanentLetter.letter || permanentLetter;
+                    cell.className = cell.className.replace(/\s*(occupied|temporary)/g, '') + ' occupied';
+                    
+                    if (permanentLetter.isJoker) {
+                        const jokerIndicator = document.createElement('div');
+                        jokerIndicator.className = 'joker-indicator';
+                        jokerIndicator.textContent = '*';
+                        cell.appendChild(jokerIndicator);
