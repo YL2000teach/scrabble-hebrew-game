@@ -12,7 +12,7 @@
         .game-area { display: flex; gap: 20px; padding: 15px; }
         .board-container { flex: 1; }
         .board { display: grid; grid-template-columns: repeat(15, 1fr); gap: 1px; background: #333; padding: 8px; border-radius: 10px; max-width: 600px; margin: 0 auto; aspect-ratio: 1; }
-        .cell { background: #f0f0f0; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; cursor: pointer; border-radius: 2px; aspect-ratio: 1; }
+        .cell { background: #f0f0f0; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; cursor: pointer; border-radius: 2px; aspect-ratio: 1; position: relative; }
         .cell:hover { background: #e0e0e0; }
         .cell.center { background: #ff6b6b; color: white; }
         .cell.word-double { background: #ffd93d; color: #333; }
@@ -21,16 +21,21 @@
         .cell.letter-triple { background: #a29bfe; color: white; }
         .cell.occupied { background: #2d3436; color: white; font-size: 14px; }
         .cell.temporary { background: #00b894; color: white; font-size: 14px; }
+        .joker-indicator { position: absolute; top: 1px; right: 1px; font-size: 6px; color: #ff6b6b; font-weight: bold; }
         .sidebar { width: 300px; display: flex; flex-direction: column; gap: 15px; }
+        .player-info { background: #f8f9fa; padding: 12px; border-radius: 10px; border-left: 4px solid #4CAF50; }
+        .players-list { background: #e9ecef; padding: 12px; border-radius: 10px; }
+        .player-item { display: flex; justify-content: space-between; padding: 8px; margin: 5px 0; background: white; border-radius: 5px; border-left: 3px solid #6c757d; }
+        .player-item.current-turn { border-left-color: #28a745; background: #d4edda; }
         .player-tiles { background: #f8f9fa; padding: 12px; border-radius: 10px; }
         .tiles-container { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
-        .tile { width: 35px; height: 35px; background: #2d3436; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 5px; cursor: pointer; position: relative; }
+        .tile { width: 35px; height: 35px; background: #2d3436; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 5px; cursor: pointer; position: relative; transition: all 0.2s; }
         .tile:hover { transform: scale(1.1); }
         .tile.selected { border: 3px solid #4CAF50; transform: scale(1.1); }
         .tile.joker { background: #e74c3c; }
         .tile-score { position: absolute; bottom: 2px; left: 2px; font-size: 8px; }
         .controls { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .btn { padding: 10px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; flex: 1; min-width: 70px; font-size: 14px; }
+        .btn { padding: 10px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; flex: 1; min-width: 70px; font-size: 14px; transition: all 0.3s; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary { background: #4CAF50; color: white; }
         .btn-warning { background: #ffc107; color: #333; }
@@ -42,14 +47,17 @@
         .connected { background: #d4edda; color: #155724; }
         .disconnected { background: #f8d7da; color: #721c24; }
         .temp-tiles { display: flex; gap: 4px; margin-top: 10px; padding: 10px; background: rgba(0, 184, 148, 0.1); border-radius: 5px; min-height: 45px; align-items: center; }
+        .temp-tiles:empty::before { content: "אותיות זמניות יופיעו כאן"; color: #6c757d; font-style: italic; }
         .message { padding: 8px; margin: 8px 0; border-radius: 5px; text-align: center; }
         .message.success { background: #d4edda; color: #155724; }
         .message.error { background: #f8d7da; color: #721c24; }
+        .message.info { background: #d1ecf1; color: #0c5460; }
         .joker-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .joker-modal.show { display: flex; }
         .joker-content { background: white; padding: 20px; border-radius: 15px; text-align: center; max-width: 400px; }
         .joker-letters { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 15px 0; }
         .joker-letter { width: 40px; height: 40px; background: #4CAF50; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .game-info { background: #e9ecef; padding: 12px; border-radius: 10px; }
         @media (max-width: 768px) {
             .game-area { flex-direction: column; }
             .sidebar { width: 100%; order: -1; }
@@ -80,17 +88,34 @@
                 <div class="board" id="gameBoard"></div>
                 <div class="temp-tiles" id="tempTiles"></div>
                 <div class="controls">
-                    <button class="btn btn-primary" onclick="confirmWord()">אשר מילה</button>
-                    <button class="btn btn-warning" onclick="clearTemporary()">נקה</button>
-                    <button class="btn btn-secondary" onclick="exchangeTiles()">החלף אותיות</button>
-                    <button class="btn btn-secondary" onclick="passTurn()">דלג תור</button>
+                    <button class="btn btn-primary" id="confirmBtn" onclick="confirmWord()" disabled>אשר מילה</button>
+                    <button class="btn btn-warning" id="clearBtn" onclick="clearTemporary()" disabled>נקה</button>
+                    <button class="btn btn-secondary" id="exchangeBtn" onclick="exchangeTiles()" disabled>החלף אותיות</button>
+                    <button class="btn btn-secondary" id="passBtn" onclick="passTurn()" disabled>דלג תור</button>
                 </div>
             </div>
             
             <div class="sidebar">
+                <div class="players-list">
+                    <h3>שחקנים</h3>
+                    <div id="playersList"></div>
+                </div>
+                
+                <div class="player-info">
+                    <h3>המידע שלי</h3>
+                    <div>ניקוד: <span id="myScore">0</span></div>
+                    <div>אותיות נותרות: <span id="myTilesCount">7</span></div>
+                </div>
+                
                 <div class="player-tiles">
                     <h3>האותיות שלי</h3>
                     <div class="tiles-container" id="playerTiles"></div>
+                </div>
+                
+                <div class="game-info">
+                    <h3>מידע משחק</h3>
+                    <div>אותיות בשק: <span id="tilesLeft">100</span></div>
+                    <div>קוד חדר: <span id="roomCode">-</span></div>
                 </div>
             </div>
         </div>
@@ -99,6 +124,7 @@
     <div class="joker-modal" id="jokerModal">
         <div class="joker-content">
             <h3>בחר אות לג'וקר</h3>
+            <p>הג'וקר יקבל את הניקוד של האות הנבחרת</p>
             <div class="joker-letters" id="jokerLetters"></div>
             <button class="btn btn-secondary" onclick="closeJokerModal()">ביטול</button>
         </div>
@@ -119,17 +145,20 @@
         
         const SPECIAL_CELLS = {
             'word-triple': [[0,0], [0,7], [0,14], [7,0], [7,14], [14,0], [14,7], [14,14]],
-            'word-double': [[1,1], [2,2], [3,3], [4,4], [10,10], [11,11], [12,12], [13,13]],
+            'word-double': [[1,1], [2,2], [3,3], [4,4], [1,13], [2,12], [3,11], [4,10], [7,7], [10,4], [11,3], [12,2], [13,1], [13,13], [12,12], [11,11], [10,10]],
             'letter-triple': [[1,5], [1,9], [5,1], [5,5], [5,9], [5,13], [9,1], [9,5], [9,9], [9,13], [13,5], [13,9]],
             'letter-double': [[0,3], [0,11], [2,6], [2,8], [3,0], [3,7], [3,14], [6,2], [6,6], [6,8], [6,12], [7,3], [7,11], [8,2], [8,6], [8,8], [8,12], [11,0], [11,7], [11,14], [12,6], [12,8], [14,3], [14,11]]
         };
         
         let gameState = {
             board: Array(15).fill().map(() => Array(15).fill(null)),
+            players: {},
+            currentPlayer: null,
             myTiles: [],
             temporaryTiles: [],
             selectedTile: null,
-            myId: null
+            myId: null,
+            myScore: 0
         };
         
         let ws = null;
@@ -181,9 +210,16 @@
                     tileElement.className += ' selected';
                 }
                 
-                if (tile === '' || (tile.letter === '')) {
+                if (isJoker(tile)) {
                     tileElement.className += ' joker';
                     tileElement.textContent = tile.chosenLetter || '?';
+                    
+                    if (tile.chosenLetter) {
+                        const jokerIndicator = document.createElement('div');
+                        jokerIndicator.className = 'joker-indicator';
+                        jokerIndicator.textContent = '*';
+                        tileElement.appendChild(jokerIndicator);
+                    }
                 } else {
                     tileElement.textContent = tile.letter || tile;
                 }
@@ -196,28 +232,46 @@
                 tileElement.addEventListener('click', () => selectTile(index));
                 container.appendChild(tileElement);
             });
+            
+            document.getElementById('myTilesCount').textContent = gameState.myTiles.length;
         }
         
         function getTilePoints(tile) {
             if (typeof tile === 'string') {
                 return LETTERS[tile]?.points || 0;
             }
-            if (tile.letter === '' && tile.chosenLetter) {
+            if (isJoker(tile) && tile.chosenLetter) {
                 return LETTERS[tile.chosenLetter]?.points || 0;
             }
             return LETTERS[tile.letter]?.points || 0;
         }
         
+        function isJoker(tile) {
+            if (typeof tile === 'string') {
+                return tile === '';
+            }
+            return tile.letter === '' || tile.letter === null;
+        }
+        
         function selectTile(index) {
+            if (!isMyTurn()) {
+                showMessage('לא התור שלך!', 'error');
+                return;
+            }
+            
             const tile = gameState.myTiles[index];
             
-            if (tile === '' || (tile.letter === '' && !tile.chosenLetter)) {
+            if (isJoker(tile) && !tile.chosenLetter) {
                 openJokerModal(index);
                 return;
             }
             
             gameState.selectedTile = gameState.selectedTile === index ? null : index;
             renderPlayerTiles();
+        }
+        
+        function isMyTurn() {
+            return gameState.currentPlayer === gameState.myId;
         }
         
         function openJokerModal(tileIndex) {
@@ -255,14 +309,50 @@
         }
         
         function placeTile(row, col) {
-            if (gameState.selectedTile === null) return;
+            if (!isMyTurn()) {
+                showMessage('לא התור שלך!', 'error');
+                return;
+            }
+            
+            if (gameState.selectedTile === null) {
+                // Return temporary tile to hand
+                const tempIndex = gameState.temporaryTiles.findIndex(t => t.row === row && t.col === col);
+                if (tempIndex !== -1) {
+                    const tempTile = gameState.temporaryTiles.splice(tempIndex, 1)[0];
+                    gameState.myTiles.push(tempTile.originalTile);
+                    updateBoardDisplay();
+                    renderPlayerTiles();
+                    updateControls();
+                }
+                return;
+            }
+            
+            if (gameState.board[row][col] !== null) {
+                showMessage('המקום תפוס', 'error');
+                return;
+            }
+            
+            const existingTemp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
+            if (existingTemp) {
+                showMessage('יש כבר אות זמנית במקום זה', 'error');
+                return;
+            }
             
             const tile = gameState.myTiles[gameState.selectedTile];
+            const displayLetter = getTileLetter(tile);
+            
+            if (isJoker(tile) && !tile.chosenLetter) {
+                showMessage('תחילה בחר אות לג\'וקר', 'error');
+                return;
+            }
             
             gameState.temporaryTiles.push({
                 row: row,
                 col: col,
-                letter: tile.chosenLetter || tile.letter || tile,
+                letter: displayLetter,
+                isJoker: isJoker(tile),
+                chosenLetter: tile.chosenLetter || null,
+                points: getTilePoints(tile),
                 originalTile: tile
             });
             
@@ -271,6 +361,14 @@
             
             updateBoardDisplay();
             renderPlayerTiles();
+            updateControls();
+        }
+        
+        function getTileLetter(tile) {
+            if (typeof tile === 'string') {
+                return tile;
+            }
+            return tile.chosenLetter || tile.letter || '';
         }
         
         function updateBoardDisplay() {
@@ -282,12 +380,28 @@
                 const permanent = gameState.board[row][col];
                 const temp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
                 
+                cell.innerHTML = '';
+                
                 if (permanent) {
-                    cell.textContent = permanent;
+                    cell.textContent = permanent.letter || permanent;
                     cell.className = cell.className.replace(/\s*(occupied|temporary)/g, '') + ' occupied';
+                    
+                    if (permanent.isJoker) {
+                        const jokerIndicator = document.createElement('div');
+                        jokerIndicator.className = 'joker-indicator';
+                        jokerIndicator.textContent = '*';
+                        cell.appendChild(jokerIndicator);
+                    }
                 } else if (temp) {
                     cell.textContent = temp.letter;
                     cell.className = cell.className.replace(/\s*(occupied|temporary)/g, '') + ' temporary';
+                    
+                    if (temp.isJoker) {
+                        const jokerIndicator = document.createElement('div');
+                        jokerIndicator.className = 'joker-indicator';
+                        jokerIndicator.textContent = '*';
+                        cell.appendChild(jokerIndicator);
+                    }
                 } else {
                     cell.className = cell.className.replace(/\s*(occupied|temporary)/g, '');
                     // Reset original content
@@ -314,19 +428,36 @@
             });
         }
         
+        function updateControls() {
+            const isMyTurnNow = isMyTurn();
+            const hasTemporaryTiles = gameState.temporaryTiles.length > 0;
+            
+            document.getElementById('confirmBtn').disabled = !isMyTurnNow || !hasTemporaryTiles;
+            document.getElementById('clearBtn').disabled = !hasTemporaryTiles;
+            document.getElementById('exchangeBtn').disabled = !isMyTurnNow || hasTemporaryTiles || gameState.selectedTile === null;
+            document.getElementById('passBtn').disabled = !isMyTurnNow || hasTemporaryTiles;
+        }
+        
         function confirmWord() {
             if (gameState.temporaryTiles.length === 0) {
                 showMessage('לא הונחו אותיות חדשות', 'error');
                 return;
             }
             
-            // Calculate score
             const score = calculateWordScore();
             
-            // Move temp tiles to board
+            // Move temp tiles to board with full info
             gameState.temporaryTiles.forEach(tile => {
-                gameState.board[tile.row][tile.col] = tile.letter;
+                gameState.board[tile.row][tile.col] = {
+                    letter: tile.letter,
+                    isJoker: tile.isJoker,
+                    chosenLetter: tile.chosenLetter
+                };
             });
+            
+            // Update local score
+            gameState.myScore += score;
+            document.getElementById('myScore').textContent = gameState.myScore;
             
             // Send to server
             if (ws && ws.readyState === WebSocket.OPEN) {
@@ -339,8 +470,10 @@
             
             // Clear temp tiles
             gameState.temporaryTiles = [];
+            gameState.selectedTile = null;
             
             updateBoardDisplay();
+            updateControls();
             showMessage(`מילה נוספה! +${score} נקודות`, 'success');
         }
         
@@ -355,7 +488,7 @@
 
                 for (const tile of word.tiles) {
                     const isNew = newTiles.some(t => t.row === tile.row && t.col === tile.col);
-                    let letterScore = LETTERS[tile.letter]?.points || 0;
+                    let letterScore = getLetterScore(tile.row, tile.col);
 
                     if (isNew) {
                         const bonusType = getCellBonus(tile.row, tile.col);
@@ -371,12 +504,28 @@
                 totalScore += wordScore * wordMultiplier;
             }
 
-            // Bonus for using all 7 tiles
             if (newTiles.length === 7) {
                 totalScore += 50;
             }
 
             return totalScore;
+        }
+        
+        function getLetterScore(row, col) {
+            const temp = gameState.temporaryTiles.find(t => t.row === row && t.col === col);
+            if (temp) {
+                return temp.points;
+            }
+            
+            const permanent = gameState.board[row][col];
+            if (permanent) {
+                if (permanent.isJoker && permanent.chosenLetter) {
+                    return LETTERS[permanent.chosenLetter]?.points || 0;
+                }
+                return LETTERS[permanent.letter || permanent]?.points || 0;
+            }
+            
+            return 0;
         }
 
         function findAllWordsFormed(newTiles) {
@@ -435,7 +584,7 @@
             if (temp) return temp.letter;
             
             const permanent = gameState.board[row][col];
-            if (permanent) return permanent;
+            if (permanent) return permanent.letter || permanent;
             
             return null;
         }
@@ -445,139 +594,4 @@
         }
 
         function inBounds(row, col) {
-            return row >= 0 && row < 15 && col >= 0 && col < 15;
-        }
-
-        function getCellBonus(row, col) {
-            for (const [type, positions] of Object.entries(SPECIAL_CELLS)) {
-                if (positions.some(([r, c]) => r === row && c === col)) {
-                    return type;
-                }
-            }
-            return null;
-        }
-        
-        function clearTemporary() {
-            gameState.temporaryTiles.forEach(tile => {
-                gameState.myTiles.push(tile.originalTile);
-            });
-            
-            gameState.temporaryTiles = [];
-            gameState.selectedTile = null;
-            
-            updateBoardDisplay();
-            renderPlayerTiles();
-        }
-        
-        function exchangeTiles() {
-            showMessage('החלפת אותיות', 'success');
-        }
-        
-        function passTurn() {
-            showMessage('התור הועבר', 'success');
-        }
-        
-        function showMessage(text, type) {
-            const existingMessage = document.querySelector('.message');
-            if (existingMessage) existingMessage.remove();
-            
-            const message = document.createElement('div');
-            message.className = `message ${type}`;
-            message.textContent = text;
-            
-            document.querySelector('.board-container').insertBefore(message, document.querySelector('.board-container').firstChild);
-            
-            setTimeout(() => {
-                if (message.parentNode) message.remove();
-            }, 3000);
-        }
-        
-        function joinRoom() {
-            const roomId = document.getElementById('roomInput').value.trim() || Math.random().toString(36).substring(2, 8).toUpperCase();
-            const playerName = document.getElementById('nameInput').value.trim() || 'שחקן';
-            
-            try {
-                ws = new WebSocket(WS_URL);
-                
-                ws.onopen = function() {
-                    ws.send(JSON.stringify({
-                        type: 'join_room',
-                        roomId: roomId,
-                        playerName: playerName
-                    }));
-                    
-                    document.getElementById('connectionStatus').textContent = `מחובר לחדר: ${roomId}`;
-                    document.getElementById('connectionStatus').className = 'connection-status connected';
-                };
-                
-                ws.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    
-                    if (data.type === 'room_joined') {
-                        gameState.myId = data.playerId;
-                        gameState.myTiles = data.myTiles || generateInitialTiles();
-                        renderPlayerTiles();
-                    }
-                    
-                    if (data.type === 'word_played' && data.playerId === gameState.myId && data.newTiles) {
-                        gameState.myTiles = data.newTiles;
-                        renderPlayerTiles();
-                    }
-                };
-                
-                ws.onclose = function() {
-                    document.getElementById('connectionStatus').textContent = 'נותק';
-                    document.getElementById('connectionStatus').className = 'connection-status disconnected';
-                };
-                
-            } catch (error) {
-                // Demo mode
-                gameState.myId = 'demo';
-                gameState.myTiles = generateInitialTiles();
-                renderPlayerTiles();
-                
-                document.getElementById('connectionStatus').textContent = `מצב דמו - חדר: ${roomId}`;
-                document.getElementById('connectionStatus').className = 'connection-status connected';
-            }
-        }
-        
-        function generateInitialTiles() {
-            const tiles = [];
-            const availableLetters = [];
-            
-            for (const [letter, data] of Object.entries(LETTERS)) {
-                for (let i = 0; i < data.count; i++) {
-                    availableLetters.push(letter);
-                }
-            }
-            
-            for (let i = 0; i < 7; i++) {
-                if (availableLetters.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * availableLetters.length);
-                    const letter = availableLetters.splice(randomIndex, 1)[0];
-                    
-                    if (letter === '') {
-                        tiles.push({ letter: '', chosenLetter: null });
-                    } else {
-                        tiles.push(letter);
-                    }
-                }
-            }
-            
-            return tiles;
-        }
-        
-        // Initialize game
-        document.addEventListener('DOMContentLoaded', function() {
-            createBoard();
-            
-            // Click outside modal to close
-            document.getElementById('jokerModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeJokerModal();
-                }
-            });
-        });
-    </script>
-</body>
-</html>
+            return row >=
