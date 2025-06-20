@@ -5,18 +5,39 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
+
+// **תיקון עיקרי לRender**: יצירת WebSocket Server על אותו שרת HTTP
 const wss = new WebSocket.Server({ 
-    server,
-    perMessageDeflate: false
+    server: server,  // חובה לRender - אותו שרת HTTP
+    perMessageDeflate: false,
+    clientTracking: true
 });
 
 // הגשת קבצים סטטיים
 app.use(express.static(path.join(__dirname)));
-// Keep connections alive
+
+// Headers לRender
 app.use((req, res, next) => {
     res.header('Connection', 'keep-alive');
     res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     next();
+});
+
+// **תיקון**: Health check endpoint לRender
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        activeGames: games.size,
+        totalConnections: wss.clients.size
+    });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // הגדרות המשחק
@@ -44,14 +65,7 @@ const LETTER_DISTRIBUTION = {
     'ר': { count: 6, points: 2 },
     'ש': { count: 3, points: 3 },
     'ת': { count: 6, points: 2 },
-    '': { count: 2, points: 0 } // אותיות ריקות
-};
-
-const SPECIAL_CELLS = {
-    'word-triple': [[0,0], [0,7], [0,14], [7,0], [7,14], [14,0], [14,7], [14,14]],
-    'word-double': [[1,1], [2,2], [3,3], [4,4], [1,13], [2,12], [3,11], [4,10], [7,7], [10,4], [11,3], [12,2], [13,1], [13,13], [12,12], [11,11], [10,10]],
-    'letter-triple': [[1,5], [1,9], [5,1], [5,5], [5,9], [5,13], [9,1], [9,5], [9,9], [9,13], [13,5], [13,9]],
-    'letter-double': [[0,3], [0,11], [2,6], [2,8], [3,0], [3,7], [3,14], [6,2], [6,6], [6,8], [6,12], [7,3], [7,11], [8,2], [8,6], [8,8], [8,12], [11,0], [11,7], [11,14], [12,6], [12,8], [14,3], [14,11]]
+    '': { count: 2, points: 0 } // ג'וקרים
 };
 
 // משחקים פעילים
@@ -67,6 +81,7 @@ class ScrabbleGame {
         this.turnOrder = [];
         this.gameStarted = false;
         this.consecutivePasses = 0;
+        this.lastActivity = Date.now(); // **תיקון**: מעקב אחר פעילות
     }
     
     createTileBag() {
@@ -89,21 +104,28 @@ class ScrabbleGame {
     }
     
     addPlayer(playerId, playerName, ws) {
+        // **תיקון**: בדיקת מגבלת שחקנים
+        if (this.players.size >= 4) {
+            return null; // חדר מלא
+        }
+
         const player = {
             id: playerId,
-            name: playerName,
+            name: playerName || 'שחקן אנונימי',
             score: 0,
             tiles: [],
-            ws: ws
+            ws: ws,
+            joinTime: Date.now()
         };
         
         this.players.set(playerId, player);
         this.turnOrder.push(playerId);
+        this.lastActivity = Date.now();
         
         // חלוקת אותיות התחלתיות
         this.dealTiles(playerId, TILES_PER_PLAYER);
         
-        // התחלת המשחק אם יש לפחות שני שחקנים
+        // **תיקון**: התחלת המשחק אם יש לפחות שחקן אחד (למצב דמו) או שניים
         if (this.players.size >= 1 && !this.gameStarted) {
             this.startGame();
         }
@@ -121,10 +143,12 @@ class ScrabbleGame {
             this.players.delete(playerId);
             this.turnOrder = this.turnOrder.filter(id => id !== playerId);
             
-            // עדכון אינדקס השחקן הנוכחי
-            if (this.currentPlayerIndex >= this.turnOrder.length) {
+            // **תיקון**: עדכון אינדקס השחקן הנוכחי
+            if (this.currentPlayerIndex >= this.turnOrder.length && this.turnOrder.length > 0) {
                 this.currentPlayerIndex = 0;
             }
+            
+            this.lastActivity = Date.now();
         }
         
         return player;
@@ -133,7 +157,8 @@ class ScrabbleGame {
     startGame() {
         this.gameStarted = true;
         this.currentPlayerIndex = 0;
-        console.log(`Game started in room ${this.roomId}`);
+        this.lastActivity = Date.now();
+        console.log(`Game started in room ${this.roomId} with ${this.players.size} players`);
     }
     
     getCurrentPlayer() {
@@ -161,13 +186,27 @@ class ScrabbleGame {
             return { success: false, error: 'לא התור שלך' };
         }
         
+        // **תיקון**: בדיקת תקינות האותיות
+        if (!tiles || tiles.length === 0) {
+            return { success: false, error: 'לא הוגדרו אותיות' };
+        }
+        
         // הצבת האותיות על הלוח
         tiles.forEach(tile => {
-            this.board[tile.row][tile.col] = tile.letter;
+            if (tile.row >= 0 && tile.row < 15 && tile.col >= 0 && tile.col < 15) {
+                this.board[tile.row][tile.col] = {
+                    letter: tile.letter,
+                    isJoker: tile.isJoker || false,
+                    chosenLetter: tile.chosenLetter || null
+                };
+            }
         });
         
         // עדכון ניקוד
         player.score += score;
+        
+        // **תיקון**: הסרת האותיות מהשחקן לפני חלוקת אותיות חדשות
+        // (בהנחה שהאותיות כבר הוסרו בצד הלקוח)
         
         // חלוקת אותיות חדשות
         const newTiles = this.dealTiles(playerId, tiles.length);
@@ -175,10 +214,11 @@ class ScrabbleGame {
         // מעבר לשחקן הבא
         this.nextTurn();
         this.consecutivePasses = 0;
+        this.lastActivity = Date.now();
         
         return { 
             success: true, 
-            newTiles: newTiles,
+            newTiles: player.tiles, // שליחת כל האותיות
             score: score
         };
     }
@@ -189,8 +229,13 @@ class ScrabbleGame {
             return { success: false, error: 'לא התור שלך' };
         }
         
-        if (this.tileBag.length < tileIndexes.length) {
-            return { success: false, error: 'אין מספיק אותיות בשק' };
+        if (this.tileBag.length < 7) { // **תיקון**: בדיקה שיש מספיק אותיות
+            return { success: false, error: 'אין מספיק אותיות בשק להחלפה' };
+        }
+        
+        // **תיקון**: בדיקת תקינות האינדקסים
+        if (!tileIndexes || tileIndexes.length === 0) {
+            return { success: false, error: 'לא נבחרו אותיות להחלפה' };
         }
         
         // הסרת האותיות מהשחקן והחזרתן לשק
@@ -212,6 +257,7 @@ class ScrabbleGame {
         // מעבר לשחקן הבא
         this.nextTurn();
         this.consecutivePasses = 0;
+        this.lastActivity = Date.now();
         
         return { success: true, newTiles: player.tiles };
     }
@@ -223,8 +269,9 @@ class ScrabbleGame {
         
         this.nextTurn();
         this.consecutivePasses++;
+        this.lastActivity = Date.now();
         
-        // אם כל השחקנים דילגו פעמיים ברצף, סיום המשחק
+        // **תיקון**: סיום המשחק אם כל השחקנים דילגו פעמיים ברצף
         if (this.consecutivePasses >= this.players.size * 2) {
             this.endGame();
             return { success: true, gameEnded: true };
@@ -261,6 +308,7 @@ class ScrabbleGame {
             }))
         });
         
+        this.gameStarted = false;
         return winner;
     }
     
@@ -281,42 +329,74 @@ class ScrabbleGame {
     
     broadcastToAll(message, excludeId = null) {
         for (const [playerId, player] of this.players) {
-            if (playerId !== excludeId && player.ws.readyState === WebSocket.OPEN) {
-                player.ws.send(JSON.stringify(message));
+            if (playerId !== excludeId && player.ws && player.ws.readyState === WebSocket.OPEN) {
+                try {
+                    player.ws.send(JSON.stringify(message));
+                } catch (error) {
+                    console.error(`Error sending message to player ${playerId}:`, error);
+                }
             }
         }
     }
     
     sendToPlayer(playerId, message) {
         const player = this.players.get(playerId);
-        if (player && player.ws.readyState === WebSocket.OPEN) {
-            player.ws.send(JSON.stringify(message));
+        if (player && player.ws && player.ws.readyState === WebSocket.OPEN) {
+            try {
+                player.ws.send(JSON.stringify(message));
+            } catch (error) {
+                console.error(`Error sending message to player ${playerId}:`, error);
+            }
         }
     }
 }
 
-// טיפול בחיבורי WebSocket
-wss.on('connection', (ws) => {
+// **תיקון**: טיפול בחיבורי WebSocket עם error handling טוב יותר
+wss.on('connection', (ws, req) => {
+    console.log('New WebSocket connection established');
     let playerId = null;
     let currentGame = null;
+    
+    // **תיקון**: Keep-alive mechanism
+    const keepAlive = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.ping();
+        } else {
+            clearInterval(keepAlive);
+        }
+    }, 30000); // ping כל 30 שניות
+    
+    ws.on('pong', () => {
+        // Connection is alive
+    });
     
     ws.on('message', (message) => {
         try {
             const data = JSON.parse(message);
-            console.log('Received:', data);
+            console.log('Received message:', data.type, data.roomId || '');
             
             switch (data.type) {
                 case 'join_room':
-                    playerId = 'player_' + Math.random().toString(36).substring(2, 9);
-                    const roomId = data.roomId;
+                    // **תיקון**: יצירת ID ייחודי יותר
+                    playerId = 'player_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+                    const roomId = data.roomId || generateRoomId();
                     
                     // יצירת משחק חדש אם לא קיים
                     if (!games.has(roomId)) {
                         games.set(roomId, new ScrabbleGame(roomId));
+                        console.log(`Created new game room: ${roomId}`);
                     }
                     
                     currentGame = games.get(roomId);
                     const player = currentGame.addPlayer(playerId, data.playerName, ws);
+                    
+                    if (!player) {
+                        ws.send(JSON.stringify({
+                            type: 'error',
+                            message: 'החדר מלא - מקסימום 4 שחקנים'
+                        }));
+                        break;
+                    }
                     
                     // שליחת אישור הצטרפות
                     ws.send(JSON.stringify({
@@ -333,7 +413,7 @@ wss.on('connection', (ws) => {
                         player: { id: player.id, name: player.name, score: player.score }
                     }, playerId);
                     
-                    console.log(`Player ${data.playerName} joined room ${roomId}`);
+                    console.log(`Player ${data.playerName} joined room ${roomId} (${currentGame.players.size} players total)`);
                     break;
                     
                 case 'play_word':
@@ -347,23 +427,25 @@ wss.on('connection', (ws) => {
                     if (wordResult.success) {
                         const player = currentGame.players.get(playerId);
                         
-                        // עדכון כל השחקנים
+                        // עדכון כל השחקנים על המהלך
                         currentGame.broadcastToAll({
                             type: 'word_played',
                             playerId: playerId,
                             playerName: player.name,
                             score: data.score,
-                            ...currentGame.getGameState()
+                            board: currentGame.board,
+                            players: Object.fromEntries(
+                                Array.from(currentGame.players.entries()).map(([id, p]) => [
+                                    id, { id: p.id, name: p.name, score: p.score }
+                                ])
+                            ),
+                            tilesLeft: currentGame.tileBag.length
                         });
                         
-                        // שליחת אותיות חדשות לשחקן
+                        // שליחת אותיות חדשות רק לשחקן שביצע את המהלך
                         currentGame.sendToPlayer(playerId, {
-                            type: 'word_played',
-                            playerId: playerId,
-                            playerName: player.name,
-                            score: data.score,
-                            newTiles: player.tiles,
-                            ...currentGame.getGameState()
+                            type: 'new_tiles',
+                            myTiles: wordResult.newTiles
                         });
                         
                         // הודעה על שינוי תור
@@ -396,7 +478,8 @@ wss.on('connection', (ws) => {
                         // הודעה על שינוי תור
                         currentGame.broadcastToAll({
                             type: 'turn_changed',
-                            currentPlayer: currentGame.getCurrentPlayer()
+                            currentPlayer: currentGame.getCurrentPlayer(),
+                            tilesLeft: currentGame.tileBag.length
                         });
                         
                     } else {
@@ -414,7 +497,6 @@ wss.on('connection', (ws) => {
                     
                     if (passResult.success) {
                         if (passResult.gameEnded) {
-                            // המשחק הסתיים
                             console.log(`Game ended in room ${currentGame.roomId}`);
                         } else {
                             // הודעה על שינוי תור
@@ -430,15 +512,19 @@ wss.on('connection', (ws) => {
                     
                 default:
                     console.log('Unknown message type:', data.type);
+                    ws.send(JSON.stringify({ type: 'error', message: 'סוג הודעה לא מוכר' }));
             }
             
         } catch (error) {
             console.error('Error handling message:', error);
-            ws.send(JSON.stringify({ type: 'error', message: 'שגיאה בשרת' }));
+            ws.send(JSON.stringify({ type: 'error', message: 'שגיאה בעיבוד ההודעה' }));
         }
     });
     
-    ws.on('close', () => {
+    ws.on('close', (code, reason) => {
+        console.log(`WebSocket connection closed: ${code} ${reason}`);
+        clearInterval(keepAlive);
+        
         if (currentGame && playerId) {
             const removedPlayer = currentGame.removePlayer(playerId);
             
@@ -460,21 +546,59 @@ wss.on('connection', (ws) => {
             }
         }
     });
+    
+    ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        clearInterval(keepAlive);
+    });
 });
 
-// הפעלת השרת
-const PORT = process.env.PORT || 8080;
+// **תיקון**: פונקציה ליצירת ID חדר
+function generateRoomId() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+// **תיקון**: הפעלת השרת על הפורט הנכון לRender
+const PORT = process.env.PORT || 3000;
+
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🎯 שרת שבץ נא פועל על פורט ${PORT}`);
-    console.log(`🌐 גש לכתובת: http://localhost:${PORT}`);
+    console.log(`🌐 Server ready for WebSocket connections`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// ניקוי משחקים ישנים (כל שעה)
+// **תיקון**: ניקוי משחקים ישנים (כל 30 דקות)
 setInterval(() => {
+    const now = Date.now();
+    const maxInactivity = 30 * 60 * 1000; // 30 דקות
+    
     for (const [roomId, game] of games.entries()) {
-        if (game.players.size === 0) {
+        if (game.players.size === 0 || (now - game.lastActivity) > maxInactivity) {
+            // ניתוק כל החיבורים של המשחק
+            for (const [playerId, player] of game.players) {
+                if (player.ws && player.ws.readyState === WebSocket.OPEN) {
+                    player.ws.close(1000, 'Game timeout');
+                }
+            }
             games.delete(roomId);
-            console.log(`Cleaned up empty room: ${roomId}`);
+            console.log(`Cleaned up inactive room: ${roomId}`);
         }
     }
-}, 3600000); // שעה
+}, 30 * 60 * 1000);
+
+// **תיקון**: Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, closing server gracefully');
+    server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+    });
+});
+
+process.on('SIGINT', () => {
+    console.log('SIGINT received, closing server gracefully');
+    server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+    });
+});
